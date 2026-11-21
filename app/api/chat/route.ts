@@ -13,7 +13,7 @@ export const maxDuration = 60; // seconds (Vercel function limit)
  * (variable name = "MODEL_" + tier id, upper-cased, dashes -> underscores).
  */
 const DEFAULT_SLUGS: Record<string, string> = {
-  'nameless-ai': 'qwen/qwen-2.5-72b-instruct',
+  'nameless-ai': 'qwen/qwen3-30b-a3b-instruct-2507',
   'pulse-nano': 'meta-llama/llama-3.2-3b-instruct',
   'lyric-flash': 'google/gemini-2.5-flash',
   'vega-mini': 'openai/gpt-4o-mini',
