@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
 
   // Optional personalisation: the signed-in user's display name (sanitised, length-capped).
   const userName =
-    typeof rawName === 'string' ? rawName.replace(/<[^>]*>/g, '').replace(/[^\p{L}\p{N} .'-]/gu, '').trim().slice(0, 60) : '';
+    typeof rawName === 'string' ? rawName.replace(/<[^>]*>/g, '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, 60) : '';
   const system = userName ? `${SYSTEM_PROMPT}\n\nThe user's name is ${userName}. Address them by name only when natural.` : SYSTEM_PROMPT;
   const payloadMessages = [{ role: 'system', content: system }, ...messages];
 
