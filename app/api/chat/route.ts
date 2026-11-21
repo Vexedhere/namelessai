@@ -211,26 +211,38 @@ export async function POST(req: NextRequest) {
     'https://namelesslabs.ai';
 
   try {
-    const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': siteUrl,
-        'X-Title': 'Nameless Labs AI',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: resolveSlug(modelId),
-        messages: payloadMessages,
-        stream: true,
-        max_tokens: MAX_TOKENS,
-      }),
-      signal: req.signal,
-    });
+    const primarySlug = resolveSlug(modelId);
+    const fallbackSlugs = ['google/gemini-2.5-flash', 'openai/gpt-4o-mini'];
+    const slugsToTry = [primarySlug, ...fallbackSlugs.filter((slug) => slug !== primarySlug)];
 
-    if (!upstream.ok || !upstream.body) {
-      const raw = await upstream.text().catch(() => '');
-      return jsonError(friendlyUpstreamError(upstream.status, raw), upstream.status === 401 ? 502 : upstream.status);
+    let upstream: Response | null = null;
+    for (const slug of slugsToTry) {
+      upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'HTTP-Referer': siteUrl,
+          'X-Title': 'Nameless Labs AI',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: slug,
+          messages: payloadMessages,
+          stream: true,
+          max_tokens: MAX_TOKENS,
+        }),
+        signal: req.signal,
+      });
+
+      // If a model ID is unavailable, automatically try a known fallback.
+      if (upstream.status !== 404) break;
+      console.warn(`OpenRouter model ${slug} returned 404; trying fallback.`);
+    }
+
+    if (!upstream || !upstream.ok || !upstream.body) {
+      const status = upstream?.status ?? 502;
+      const raw = upstream ? await upstream.text().catch(() => '') : '';
+      return jsonError(friendlyUpstreamError(status, raw), status === 401 ? 502 : status);
     }
 
     return textResponse(sseToTextStream(upstream.body), 'openrouter');
