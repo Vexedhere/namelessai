@@ -64,7 +64,7 @@ export function ModelPicker({
               Select model tier
             </p>
             {MODELS.map((m) => {
-              const active = m.id === value;
+              const active = m.id === value;\n              const required = m.id === 'aether-pro' ? 'PLUS' : m.id === 'quasar-apex' ? 'PRO' : 'FREE';\n              const locked = required === 'PLUS' ? tier === 'FREE' : required === 'PRO' ? tier !== 'PRO' : false;
               return (
                 <button
                   key={m.id}
@@ -75,7 +75,7 @@ export function ModelPicker({
                     setOpen(false);
                   }}
                   className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
-                    active ? 'bg-white/[0.08]' : 'hover:bg-white/[0.05]'
+                    active ? 'bg-white/[0.08]' : locked ? 'opacity-60 cursor-not-allowed' : 'hover:bg-white/[0.05]'
                   }`}
                 >
                   <ModelOrb model={m} size={30} />
@@ -91,7 +91,7 @@ export function ModelPicker({
                     </span>
                     <span className="mt-0.5 block text-xs leading-snug text-zinc-400">{m.tagline}</span>
                   </span>
-                  {active && <CheckIcon width={16} height={16} className="shrink-0 text-cyan-300" />}
+                  {active && <CheckIcon width={16} height={16} className="shrink-0 text-cyan-300" />}\n                  {locked && <span className="shrink-0 text-[11px] text-violet-300">Upgrade</span>}
                 </button>
               );
             })}
