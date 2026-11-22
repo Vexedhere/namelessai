@@ -151,7 +151,23 @@ function sseToTextStream(upstream: ReadableStream<Uint8Array>): ReadableStream<U
   });
 }
 
-export async function POST(req: NextRequest) {\n  let userTier: 'FREE' | 'PLUS' | 'PRO' = 'FREE';\n  const token = req.headers.get('authorization')?.replace(/^Bearer\\s+/i, '');\n  if (token) {\n    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://nzaelikbjumaidaombmp.supabase.co';\n    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;\n    if (key) {\n      const sb = createClient(supabaseUrl, key);\n      const { data: auth } = await sb.auth.getUser(token);\n      if (auth.user) {\n        const { data: profile } = await sb.from('profiles').select('tier').eq('id', auth.user.id).maybeSingle();\n        userTier = profile?.tier === 'PRO' || profile?.tier === 'PLUS' ? profile.tier : 'FREE';\n      }\n    }\n  }\n  if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);\n  if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
+export async function POST(req: NextRequest) {
+  let userTier: 'FREE' | 'PLUS' | 'PRO' = 'FREE';
+  const token = req.headers.get('authorization')?.replace(/^Bearer\\s+/i, '');
+  if (token) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://nzaelikbjumaidaombmp.supabase.co';
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (anonKey) {
+      const authClient = createClient(supabaseUrl, anonKey);
+      const { data: auth } = await authClient.auth.getUser(token);
+      if (auth.user && serviceKey) {
+        const adminClient = createClient(supabaseUrl, serviceKey);
+        const { data: profile } = await adminClient.from('profiles').select('tier').eq('id', auth.user.id).maybeSingle();
+        userTier = profile?.tier === 'PRO' || profile?.tier === 'PLUS' ? profile.tier : 'FREE';
+      }
+    }
+  }
   let body: unknown;
   try {
     body = await req.json();
@@ -162,7 +178,7 @@ export async function POST(req: NextRequest) {\n  let userTier: 'FREE' | 'PLUS' 
   const { messages: rawMessages, model: rawModel, userName: rawName } = (body ?? {}) as Record<string, unknown>;
   const modelId = typeof rawModel === 'string' && MODEL_IDS.has(rawModel) ? rawModel : DEFAULT_MODEL_ID;
   const messages = sanitizeMessages(rawMessages);
-  if (!messages) return jsonError('Send at least one non-empty user message.', 400);
+  if (!messages) return jsonError('Send at least one non-empty user message.', 400);\n  const requiredTier: 'FREE' | 'PLUS' | 'PRO' = modelId === 'quasar-apex' ? 'PRO' : modelId === 'aether-pro' ? 'PLUS' : 'FREE';\n  if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);\n  if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
 
   // Optional personalisation: the signed-in user's display name (sanitised, length-capped).
   const userName =
