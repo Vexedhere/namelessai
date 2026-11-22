@@ -60,8 +60,16 @@ export default function ChatPage() {
   const [tier, setTier] = useState<'FREE' | 'PLUS' | 'PRO'>('FREE');
   const syncedRef = useRef<Map<string, number>>(new Map());
   const { user, profile, ready: authReady } = useAuth();
-  const userId = user?.id ?? null;\n
-  useEffect(() => {\n    const sb = getSupabase();\n    if (!sb || !userId) { setTier('FREE'); return; }\n    sb.from('profiles').select('tier').eq('id', userId).maybeSingle().then(({ data }) => {\n      const value = data?.tier; setTier(value === 'PRO' || value === 'PLUS' ? value : 'FREE');\n    });\n  }, [userId]);
+  const userId = user?.id ?? null;
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb || !userId) { setTier('FREE'); return; }
+    sb.from('profiles').select('tier').eq('id', userId).maybeSingle().then(({ data }) => {
+      const value = data?.tier;
+      setTier(value === 'PRO' || value === 'PLUS' ? value : 'FREE');
+    });
+  }, [userId]);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
