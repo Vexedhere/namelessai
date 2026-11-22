@@ -56,10 +56,12 @@ export default function ChatPage() {
   const [hydrated, setHydrated] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [cloudReady, setCloudReady] = useState(false);
-  const [sync, setSync] = useState<'off' | 'syncing' | 'synced' | 'error'>('off');\n  const [tier, setTier] = useState<'FREE' | 'PLUS' | 'PRO'>('FREE');
+  const [sync, setSync] = useState<'off' | 'syncing' | 'synced' | 'error'>('off');
+  const [tier, setTier] = useState<'FREE' | 'PLUS' | 'PRO'>('FREE');
   const syncedRef = useRef<Map<string, number>>(new Map());
   const { user, profile, ready: authReady } = useAuth();
-  const userId = user?.id ?? null;\n\n  useEffect(() => {\n    const sb = getSupabase();\n    if (!sb || !userId) { setTier('FREE'); return; }\n    sb.from('profiles').select('tier').eq('id', userId).maybeSingle().then(({ data }) => {\n      const value = data?.tier; setTier(value === 'PRO' || value === 'PLUS' ? value : 'FREE');\n    });\n  }, [userId]);
+  const userId = user?.id ?? null;\n
+  useEffect(() => {\n    const sb = getSupabase();\n    if (!sb || !userId) { setTier('FREE'); return; }\n    sb.from('profiles').select('tier').eq('id', userId).maybeSingle().then(({ data }) => {\n      const value = data?.tier; setTier(value === 'PRO' || value === 'PLUS' ? value : 'FREE');\n    });\n  }, [userId]);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -204,9 +206,11 @@ export default function ChatPage() {
 
       let acc = '';
       try {
+        const session = await getSupabase()?.auth.getSession();
+        const accessToken = session?.data.session?.access_token;
         const res = await fetch('/api/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
           body: JSON.stringify({
             model: modelId,
             userName: nameRef.current,
