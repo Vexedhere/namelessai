@@ -56,10 +56,10 @@ export default function ChatPage() {
   const [hydrated, setHydrated] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [cloudReady, setCloudReady] = useState(false);
-  const [sync, setSync] = useState<'off' | 'syncing' | 'synced' | 'error'>('off');
+  const [sync, setSync] = useState<'off' | 'syncing' | 'synced' | 'error'>('off');\n  const [tier, setTier] = useState<'FREE' | 'PLUS' | 'PRO'>('FREE');
   const syncedRef = useRef<Map<string, number>>(new Map());
   const { user, profile, ready: authReady } = useAuth();
-  const userId = user?.id ?? null;
+  const userId = user?.id ?? null;\n\n  useEffect(() => {\n    const sb = getSupabase();\n    if (!sb || !userId) { setTier('FREE'); return; }\n    sb.from('profiles').select('tier').eq('id', userId).maybeSingle().then(({ data }) => {\n      const value = data?.tier; setTier(value === 'PRO' || value === 'PLUS' ? value : 'FREE');\n    });\n  }, [userId]);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -374,7 +374,7 @@ export default function ChatPage() {
           >
             <MenuIcon />
           </button>
-          <ModelPicker value={model} onChange={setModel} disabled={loading} />
+          <ModelPicker value={model} onChange={setModel} disabled={loading} tier={tier} />
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden items-center gap-2 text-xs text-zinc-500 sm:flex">
               <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'animate-pulse bg-amber-400' : 'bg-emerald-400'}`} />
