@@ -78,6 +78,8 @@ export function Sidebar({
           </button>
         </div>
 
+        <div className="px-4 pb-2"><a href="https://tiers.namlesslabs.in.net" className="block w-full rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2.5 text-center text-sm font-semibold text-violet-200 transition hover:bg-violet-500/20">✦ Upgrade to Plus / Pro</a></div>
+
         {chats.length > 3 && (
           <div className="px-4 pb-1 pt-1">
             <input
