@@ -1,4 +1,5 @@
-import { NextRequest } from 'next/server';\nimport { createClient } from '@supabase/supabase-js';
+import { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { DEFAULT_MODEL_ID, MODEL_IDS } from '@/lib/models';
 
 export const runtime = 'nodejs';
@@ -178,7 +179,10 @@ export async function POST(req: NextRequest) {
   const { messages: rawMessages, model: rawModel, userName: rawName } = (body ?? {}) as Record<string, unknown>;
   const modelId = typeof rawModel === 'string' && MODEL_IDS.has(rawModel) ? rawModel : DEFAULT_MODEL_ID;
   const messages = sanitizeMessages(rawMessages);
-  if (!messages) return jsonError('Send at least one non-empty user message.', 400);\n  const requiredTier: 'FREE' | 'PLUS' | 'PRO' = modelId === 'quasar-apex' ? 'PRO' : modelId === 'aether-pro' ? 'PLUS' : 'FREE';\n  if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);\n  if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
+  if (!messages) return jsonError('Send at least one non-empty user message.', 400);
+  const requiredTier: 'FREE' | 'PLUS' | 'PRO' = modelId === 'quasar-apex' ? 'PRO' : modelId === 'aether-pro' ? 'PLUS' : 'FREE';
+  if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);
+  if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
 
   // Optional personalisation: the signed-in user's display name (sanitised, length-capped).
   const userName =
