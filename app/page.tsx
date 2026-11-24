@@ -771,7 +771,7 @@ export default function ChatPage() {
         <VoiceBar
           state={voice.state}
           interim={voice.interim}
-          error={voice.error}
+          error={voice.error ?? undefined}
           lang={voiceLang}
           onLang={changeVoiceLang}
           onStop={() => voice.stop()}
