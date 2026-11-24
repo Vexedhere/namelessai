@@ -1,0 +1,3 @@
+'use client';
+import type { Message } from '@/lib/types';
+export function MessageView({message,streaming,canRegenerate,onRegenerate}:{message:Message;streaming?:boolean;canRegenerate?:boolean;onRegenerate?:()=>void}){return <article className="rounded-2xl p-4"><div className="whitespace-pre-wrap break-words">{message.content||(streaming?'Thinking…':'')}</div>{message.error&&<p className="text-rose-300">{message.error}</p>}{canRegenerate&&<button onClick={onRegenerate}>Regenerate</button>}</article>}
