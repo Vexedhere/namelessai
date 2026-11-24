@@ -1,2 +1,0 @@
-'use client';
-export function PersonaButton({value,onChange,disabled}:{value:string;onChange:(v:string)=>void;disabled?:boolean}){return <select value={value} disabled={disabled} onChange={e=>onChange(e.target.value)} className="rounded-xl border border-white/10 bg-[#151822] p-2 text-xs"><option value="default">Default</option><option value="friendly">Friendly</option><option value="professional">Professional</option><option value="creative">Creative</option></select>}
