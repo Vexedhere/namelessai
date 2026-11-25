@@ -195,7 +195,6 @@ export default function ChatPage() {
   const aiNameRef = useRef<string | null>(null);
   aiNameRef.current = aiName;
   const [nameOpen, setNameOpen] = useState(false);
-  const [guestNote, setGuestNote] = useState(true);
   const [themeId, setThemeId] = useState(DEFAULT_THEME);
   const [accountReady, setAccountReady] = useState(false);
   const ownerRef = useRef<string | null>(null);
@@ -240,7 +239,7 @@ export default function ChatPage() {
         /* ignore */
       }
       setAiName(n);
-      setNameOpen(!n);
+      setNameOpen(false);
       setHydrated(true);
       return;
     }
@@ -283,7 +282,6 @@ export default function ChatPage() {
         if (cancelled) return;
         setSync('error'); // most likely the user_settings table hasn't been created yet (run supabase/schema.sql)
         setHydrated(true);
-        if (!aiNameRef.current) setNameOpen(true);
       });
     return () => {
       cancelled = true;
@@ -785,29 +783,29 @@ export default function ChatPage() {
         <div ref={scrollRef} onScroll={onScroll} className="scroll-thin flex-1 overflow-y-auto">
           {messages.length === 0 ? (
             <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col items-center justify-center px-5 py-10 text-center">
-              <div className="animate-float">
-                <ModelOrb model={current} size={72} />
+              <div className="welcome-orbit relative">
+                <div className="welcome-orbit-ring" />
+                <div className="welcome-orbit-core"><ModelOrb model={current} size={54} /></div>
+                <span className="welcome-orbit-spark">✦</span>
               </div>
-              <h2 className="mt-8 bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl">
-                {firstName ? `Hey ${firstName}, what are we building?` : 'What are we building today?'}
+              <div className="welcome-eyebrow mt-7"><span className="welcome-live-dot" /> YOUR AI WORKSPACE <span className="welcome-eyebrow-line" /></div>
+              <h2 className="welcome-heading mt-5">
+                {firstName ? `Welcome back, ${firstName}.` : <>Make room for <span>big ideas.</span></>}
               </h2>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-zinc-400">
-                You are chatting with <span className="font-medium text-zinc-200">{aiName ?? current.name}</span>
-                {aiName && aiName !== current.name ? <span className="text-zinc-500"> (on {current.name})</span> : null}. {current.tagline}{' '}
-                <button onClick={() => setNameOpen(true)} className="text-cyan-300 underline-offset-2 transition hover:underline">
-                  Rename
-                </button>
+              <p className="welcome-description mt-3">
+                A clear space to think, create, build and get things done.
               </p>
-
-              <div className="mt-9 grid w-full gap-2.5 sm:grid-cols-2">
-                {(agent && current.tools ? [...SUGGESTIONS.slice(0, 2), ...ACTION_SUGGESTIONS.slice(0, 6)] : SUGGESTIONS).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left text-sm text-zinc-300 transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.06] hover:text-white"
-                  >
-                    <SparkIcon width={16} height={16} className="mt-0.5 shrink-0 text-cyan-300/70 transition group-hover:text-cyan-300" />
-                    {s}
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                <span className="welcome-model-pill"><span className="welcome-pill-dot" /> {aiName ?? current.name}</span>
+                <button onClick={() => setNameOpen(true)} className="welcome-rename">Customize name <span aria-hidden>↗</span></button>
+              </div>
+              <div className="welcome-section-label mt-12 w-full"><span>START WITH A PROMPT</span><span>OR WRITE YOUR OWN BELOW</span></div>
+              <div className="mt-3 grid w-full gap-3 sm:grid-cols-2">
+                {(agent && current.tools ? [...SUGGESTIONS.slice(0, 2), ACTION_SUGGESTIONS[1], ACTION_SUGGESTIONS[3]] : SUGGESTIONS).map((s, i) => (
+                  <button key={s} onClick={() => send(s)} className="prompt-card group">
+                    <span className="prompt-card-icon"><SparkIcon width={17} height={17} /></span>
+                    <span className="min-w-0 flex-1 text-left">{s}</span>
+                    <span className="prompt-card-arrow" aria-hidden>↗</span>
                   </button>
                 ))}
               </div>
@@ -841,19 +839,6 @@ export default function ChatPage() {
           onInterrupt={voice.interrupt}
           hint={pendingEmail ? 'Say “send” to send it, or “cancel”' : undefined}
         />
-        )}
-        {authReady && !user && guestNote && (
-          <div className="mx-auto w-full max-w-3xl px-4 pb-2">
-            <div role="status" className="flex items-center gap-3 rounded-xl border border-amber-300/25 bg-amber-400/10 px-3.5 py-2 text-xs text-amber-100">
-              <span className="flex-1 leading-snug">
-                <b>You’re not signed in, so your chats aren’t saved.</b> They’ll disappear when you refresh or close this page.
-              </span>
-              <button onClick={() => setAuthOpen(true)} className="shrink-0 rounded-lg bg-amber-300/90 px-2.5 py-1 font-semibold text-black transition hover:bg-amber-200">
-                Sign in to save
-              </button>
-              <button onClick={() => setGuestNote(false)} aria-label="Dismiss" className="shrink-0 text-amber-200/70 transition hover:text-white">✕</button>
-            </div>
-          </div>
         )}
         <Composer
           loading={loading}
