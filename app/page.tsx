@@ -801,7 +801,7 @@ export default function ChatPage() {
               </div>
               <div className="welcome-section-label mt-12 w-full"><span>START WITH A PROMPT</span><span>OR WRITE YOUR OWN BELOW</span></div>
               <div className="mt-3 grid w-full gap-3 sm:grid-cols-2">
-                {(agent && current.tools ? [...SUGGESTIONS.slice(0, 2), ACTION_SUGGESTIONS[1], ACTION_SUGGESTIONS[3]] : SUGGESTIONS).map((s, i) => (
+                {(agent && current.tools ? [...SUGGESTIONS.slice(0, 2), ACTION_SUGGESTIONS[1], ACTION_SUGGESTIONS[3]] : SUGGESTIONS).map((s) => (
                   <button key={s} onClick={() => send(s)} className="prompt-card group">
                     <span className="prompt-card-icon"><SparkIcon width={17} height={17} /></span>
                     <span className="min-w-0 flex-1 text-left">{s}</span>
