@@ -53,8 +53,8 @@ export function Sidebar({
       >
         <div className="flex items-center justify-between px-5 pb-3 pt-5">
           <div className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-cyan-400 to-accent text-sm font-bold text-black shadow-[0_0_24px_rgba(34,211,238,0.35)]">
-              N
+            <span className="grid h-9 w-9 place-items-center rounded-xl border border-white/15 bg-gradient-to-br from-cyan-200 via-cyan-400 to-violet-500 text-[11px] font-black tracking-[-0.08em] text-slate-950 shadow-[0_0_28px_rgba(34,211,238,0.25)]">
+              NL
             </span>
             <div className="leading-tight">
               <h1 className="text-[15px] font-semibold tracking-tight text-white">Nameless Labs</h1>
