@@ -849,26 +849,41 @@ export default function ChatPage() {
               <SparkIcon width={14} height={14} />
               <span className="hidden sm:inline">Godmode</span>
             </button>
-            <button
-              onClick={toggleAgent}
-              disabled={!current.tools}
-              aria-pressed={agent && current.tools}
-              title={
-                current.tools
-                  ? agent
-                    ? 'Actions on: alarms, email, tasks, web, currency, weather… (click to turn off)'
-                    : 'Actions off (click to turn on)'
-                  : `${current.name} can’t use tools. Pick Lyric, Vega, Aether or NamelessAI for actions.`
-              }
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                agent && current.tools
-                  ? 'border-cyan-300/40 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/15'
-                  : 'border-white/10 text-zinc-400 hover:bg-white/10'
-              }`}
+            <div
+              role="group"
+              aria-label="Choose AI mode"
+              className="inline-flex items-center rounded-xl border border-white/10 bg-black/30 p-1 shadow-inner shadow-black/30"
             >
-              <WrenchIcon width={14} height={14} />
-              <span className="hidden sm:inline">Actions</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => { setAgent(false); setGodmode(false); }}
+                aria-pressed={!agent}
+                title="AI mode · answers, reasoning and creation without taking actions"
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  !agent
+                    ? 'bg-white/[0.12] text-white shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-200'
+                }`}
+              >
+                <SparkIcon width={13} height={13} />
+                AI
+              </button>
+              <button
+                type="button"
+                onClick={() => { if (current.tools) setAgent(true); }}
+                disabled={!current.tools}
+                aria-pressed={agent && current.tools}
+                title={current.tools ? 'Agent mode · plans tasks and uses enabled tools, with approval for sensitive actions' : `${current.name} cannot use tools. Choose a tool-capable model to enable Agent mode.`}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-35 ${
+                  agent && current.tools
+                    ? 'bg-cyan-300 text-slate-950 shadow-[0_0_18px_-6px_rgba(34,211,238,0.75)]'
+                    : 'text-zinc-500 hover:text-zinc-200'
+                }`}
+              >
+                <WrenchIcon width={13} height={13} />
+                Agent
+              </button>
+            </div>
             <button
               onClick={() => setDevicesOpen(true)}
               aria-label="Devices"
