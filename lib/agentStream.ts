@@ -46,6 +46,7 @@ export async function streamChat(p: {
   aiName?: string;
   persona?: string;
   tools: boolean;
+  godmode?: boolean;
   voice: boolean;
   voiceLang?: string;
   token?: string;
@@ -62,6 +63,7 @@ export async function streamChat(p: {
       aiName: p.aiName,
       persona: p.persona,
       tools: p.tools,
+      godmode: p.godmode === true,
       voice: p.voice,
       voiceLang: p.voiceLang,
       visitorSessionId: p.visitorSessionId,
