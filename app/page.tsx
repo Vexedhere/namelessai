@@ -21,6 +21,7 @@ import { cleanAiName, fetchAccount, pushData, pushSettings } from '@/lib/account
 import { hydrateStore, resetStore, setStorePusher } from '@/lib/store';
 import { DEFAULT_THEME, applyTheme, getCurrentTheme } from '@/lib/theme';
 import { AgentWelcome } from '@/components/AgentWelcome';
+import { CommandPalette } from '@/components/CommandPalette';
 import { VoiceBar } from '@/components/VoiceBar';
 import { VoiceHUD } from '@/components/VoiceHUD';
 import { greetingFor, namedLine, parseSpokenName } from '@/lib/hud';
@@ -87,6 +88,7 @@ export default function ChatPage() {
   type VoiceApi = ReturnType<typeof useVoiceMode>;
   const voiceRef = useRef<VoiceApi>(null as unknown as VoiceApi);
 
+  const [commandOpen, setCommandOpen] = useState(false);
   const [devicesOpen, setDevicesOpen] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
   const confirmRef = useRef<{ resolve: (ok: boolean) => void } | null>(null);
@@ -102,6 +104,17 @@ export default function ChatPage() {
     onNotice: (m) => noticeRef.current(m),
   });
   voiceRef.current = voice;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandOpen((open) => !open);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   useEffect(() => setVoiceLang(defaultVoiceLang()), []);
   const changeVoiceLang = (l: string) => setVoiceLang(l);
@@ -799,6 +812,19 @@ export default function ChatPage() {
         onSignOut={signOut}
       />
       <DevicesPanel open={devicesOpen} onClose={() => setDevicesOpen(false)} />
+      <CommandPalette
+        open={commandOpen}
+        onClose={() => setCommandOpen(false)}
+        onNewChat={newChat}
+        onToggleAgent={() => { setAgent((value) => !value); setGodmode(false); }}
+        agent={agent}
+        onDevices={() => setDevicesOpen(true)}
+        onVoice={startVoice}
+        onToggleGodmode={() => setGodmode((value) => { const next = !value; if (next) setAgent(true); return next; })}
+        godmode={godmode}
+        onExport={exportChat}
+        hasChat={!!active?.messages.length}
+      />
       <AuthModal open={authOpen && !user} onClose={() => setAuthOpen(false)} />
       <NameAiModal
         open={nameOpen && authReady && !authOpen && !voice.active}
