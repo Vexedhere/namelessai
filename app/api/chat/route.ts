@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { DEFAULT_MODEL_ID, MODEL_IDS } from '@/lib/models';
 import { TOOL_DEFS, agentSystemPrompt } from '@/lib/toolDefs';
-import { ndjson, sanitizeMessages, sseToEventStream } from '@/lib/chatProtocol';
+import { sanitizeMessages, sseToEventStream } from '@/lib/chatProtocol';
 import { getServerUser, getUserTier } from '@/lib/serverAuth';
 import { teamPrompt } from '@/lib/team';
 import { PERSONAS, PERSONA_IDS } from '@/lib/personas';
