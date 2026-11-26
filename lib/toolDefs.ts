@@ -533,6 +533,33 @@ export const TOOL_DEFS: ToolDef[] = [
   {
     type: 'function',
     function: {
+      name: 'generate_pdf',
+      description: 'Create and download a polished, professionally typeset multi-page PDF report/document. Use this instead of save_file whenever the user asks for a PDF. Provide a clear title, optional subtitle and author, and ordered sections. Section types: heading, paragraph, bullets, numbered, quote, callout, table, divider, page_break. For tables provide headers and rows. Use concise, well-structured content; never put the entire document into one paragraph.',
+      parameters: {
+        type: 'object',
+        properties: {
+          filename: str('PDF filename, without needing the .pdf extension.'),
+          title: str('Document title.'),
+          subtitle: str('Optional subtitle or report period.'),
+          author: str('Optional author or organisation.'),
+          theme: str('Visual theme.', { enum: ['navy', 'teal', 'violet', 'minimal', 'warm'] }),
+          sections: { type: 'array', description: 'Ordered document blocks. Use multiple blocks for clear hierarchy and readable pagination.', items: { type: 'object', properties: {
+            type: str('Block type.', { enum: ['heading', 'paragraph', 'bullets', 'numbered', 'quote', 'callout', 'table', 'divider', 'page_break'] }),
+            title: str('Optional section heading or callout label.'),
+            text: str('Text content for paragraph, quote, or callout.'),
+            items: { type: 'array', items: { type: 'string' }, description: 'Bullet or numbered list items.' },
+            headers: { type: 'array', items: { type: 'string' }, description: 'Table column headers.' },
+            rows: { type: 'array', items: { type: 'array', items: { type: 'string' } }, description: 'Table rows.' }
+          }, required: ['type'], additionalProperties: false } }
+        },
+        required: ['title', 'sections'],
+        additionalProperties: false
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'save_file',
       description: 'Create a text file (notes, CSV, Markdown, JSON, HTML, code) and save it to the user\'s Downloads folder. Not for executables.',
       parameters: { type: 'object', properties: { filename: str('File name with extension, e.g. "plan.md".'), content: str('Full file contents.') }, required: ['filename', 'content'], additionalProperties: false },
