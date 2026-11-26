@@ -20,6 +20,8 @@ import { NameAiModal } from '@/components/NameAiModal';
 import { cleanAiName, fetchAccount, pushData, pushSettings } from '@/lib/account';
 import { hydrateStore, resetStore, setStorePusher } from '@/lib/store';
 import { DEFAULT_THEME, applyTheme, getCurrentTheme } from '@/lib/theme';
+import { AgentWelcome } from '@/components/AgentWelcome';
+import { CommandPalette } from '@/components/CommandPalette';
 import { VoiceBar } from '@/components/VoiceBar';
 import { VoiceHUD } from '@/components/VoiceHUD';
 import { greetingFor, namedLine, parseSpokenName } from '@/lib/hud';
@@ -36,7 +38,7 @@ import { defaultVoiceLang, findVoiceLang, parseYesNo } from '@/lib/voice';
 
 const AI_NAME_KEY = 'nameless-labs-ai:ai-name'; // sessionStorage only (guests): gone when the tab closes
 const MAX_CHATS = 50;
-const MAX_STEPS = 10; // Godmode gets a larger, bounded tool-execution budget
+const MAX_STEPS = 5; // Bound agent tool rounds to control cost and avoid runaway loops
 
 const SUGGESTIONS = [
   'Build a responsive pricing section in Next.js + Tailwind',
@@ -44,20 +46,7 @@ const SUGGESTIONS = [
   'Write a Supabase row-level-security policy for a notes app',
   'Review my API design and suggest improvements',
 ];
-const ACTION_SUGGESTIONS = [
-  'Who are the founders and leaders of Nameless Labs?',
-  'Wake me up at 6:30 tomorrow and start a 10 minute timer',
-  'Draft an email to my team moving Friday’s standup to 11am',
-  'Convert 2,500 USD to INR and 5 km to miles',
-  'Add “send invoice” to my tasks, then show my to-do list',
-  'What time is it in Tokyo and New York right now?',
-  'Switch the theme to Ember',
-  'Generate a strong 20-character password and copy it',
-  'How much battery do I have, and am I online?',
-  'Turn the volume down to 30 and open Spotify',
-  'Take a screenshot and save it',
-  'Show me walking directions to the nearest coffee shop',
-];
+
 
 const uid = () =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -99,6 +88,7 @@ export default function ChatPage() {
   type VoiceApi = ReturnType<typeof useVoiceMode>;
   const voiceRef = useRef<VoiceApi>(null as unknown as VoiceApi);
 
+  const [commandOpen, setCommandOpen] = useState(false);
   const [devicesOpen, setDevicesOpen] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
   const confirmRef = useRef<{ resolve: (ok: boolean) => void } | null>(null);
@@ -115,8 +105,18 @@ export default function ChatPage() {
   });
   voiceRef.current = voice;
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandOpen((open) => !open);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   useEffect(() => setVoiceLang(defaultVoiceLang()), []);
-  const toggleAgent = () => setAgent((a) => !a);
   const changeVoiceLang = (l: string) => setVoiceLang(l);
 
   /** Resolves the tool call that is waiting on the email confirmation card. */
@@ -676,6 +676,87 @@ export default function ChatPage() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }, [active]);
 
+  const exportChatPdf = useCallback(async () => {
+    if (!active) return;
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const left = 18;
+      const right = 18;
+      const width = pageWidth - left - right;
+      let y = 20;
+      const title = active.title.replace(/[\\\\/:*?"<>|]+/g, '').slice(0, 90) || 'NamelessAI conversation';
+      const ensure = (height: number) => {
+        if (y + height > pageHeight - 20) {
+          doc.addPage();
+          y = 20;
+        }
+      };
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(19);
+      doc.setTextColor(20, 26, 38);
+      const titleLines = doc.splitTextToSize(title, width);
+      doc.text(titleLines, left, y);
+      y += titleLines.length * 8 + 2;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(110, 118, 130);
+      doc.text(`NamelessAI · ${new Date().toLocaleString()}`, left, y);
+      y += 11;
+
+      for (const message of active.messages) {
+        const label = message.role === 'user' ? 'YOU' : (message.model ? getModel(message.model).name.toUpperCase() : 'NAMELESSAI');
+        const raw = [message.content, ...(message.toolCalls ?? []).map((call) => `[${call.name}] ${call.result ?? call.status}`)].filter(Boolean).join('\n\n');
+        const plain = raw
+          .replace(/```[\s\S]*?```/g, '[Code block]')
+          .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)')
+          .replace(/^#{1,6}\s+/gm, '')
+          .replace(/[*_~`]/g, '')
+          .trim();
+        if (!plain) continue;
+        const lines = doc.splitTextToSize(plain, width);
+        const blocks = lines.length;
+        ensure(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(message.role === 'user' ? 14 : 8, message.role === 'user' ? 145 : 120, message.role === 'user' ? 170 : 150);
+        doc.text(label, left, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(42, 48, 58);
+        for (let offset = 0; offset < blocks; offset += 34) {
+          const chunk = lines.slice(offset, offset + 34);
+          ensure(chunk.length * 4.7 + 3);
+          doc.text(chunk, left, y);
+          y += chunk.length * 4.7;
+        }
+        y += 7;
+      }
+
+      const pages = doc.getNumberOfPages();
+      for (let page = 1; page <= pages; page++) {
+        doc.setPage(page);
+        doc.setDrawColor(225, 229, 235);
+        doc.line(left, pageHeight - 13, pageWidth - right, pageHeight - 13);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(130, 136, 146);
+        doc.text('NamelessAI conversation export', left, pageHeight - 8);
+        doc.text(`Page ${page} of ${pages}`, pageWidth - right, pageHeight - 8, { align: 'right' });
+      }
+      doc.save(`${title.slice(0, 65) || 'nameless-chat'}.pdf`);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      window.alert('Could not export this conversation as a PDF. Please try again.');
+    }
+  }, [active]);
+
+
   // ---- tools that drive this app (see lib/appBus.ts) ----------------------------------
   noticeRef.current = (msg) => {
     if (voiceRef.current.isActive()) voiceRef.current.speaker().say(msg);
@@ -812,6 +893,21 @@ export default function ChatPage() {
         onSignOut={signOut}
       />
       <DevicesPanel open={devicesOpen} onClose={() => setDevicesOpen(false)} />
+      <CommandPalette
+        open={commandOpen}
+        onClose={() => setCommandOpen(false)}
+        onNewChat={newChat}
+        onToggleAgent={() => { setAgent((value) => !value); setGodmode(false); }}
+        agent={agent}
+        onDevices={() => setDevicesOpen(true)}
+        onVoice={startVoice}
+        onToggleGodmode={() => setGodmode((value) => { const next = !value; if (next) setAgent(true); return next; })}
+        godmode={godmode}
+        onExport={exportChat}
+        onExportPdf={exportChatPdf}
+        hasChat={!!active?.messages.length}
+        toolsAvailable={current.tools}
+      />
       <AuthModal open={authOpen && !user} onClose={() => setAuthOpen(false)} />
       <NameAiModal
         open={nameOpen && authReady && !authOpen && !voice.active}
@@ -849,26 +945,41 @@ export default function ChatPage() {
               <SparkIcon width={14} height={14} />
               <span className="hidden sm:inline">Godmode</span>
             </button>
-            <button
-              onClick={toggleAgent}
-              disabled={!current.tools}
-              aria-pressed={agent && current.tools}
-              title={
-                current.tools
-                  ? agent
-                    ? 'Actions on: alarms, email, tasks, web, currency, weather… (click to turn off)'
-                    : 'Actions off (click to turn on)'
-                  : `${current.name} can’t use tools. Pick Lyric, Vega, Aether or NamelessAI for actions.`
-              }
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                agent && current.tools
-                  ? 'border-cyan-300/40 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/15'
-                  : 'border-white/10 text-zinc-400 hover:bg-white/10'
-              }`}
+            <div
+              role="group"
+              aria-label="Choose AI mode"
+              className="inline-flex items-center rounded-xl border border-white/10 bg-black/30 p-1 shadow-inner shadow-black/30"
             >
-              <WrenchIcon width={14} height={14} />
-              <span className="hidden sm:inline">Actions</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => { setAgent(false); setGodmode(false); }}
+                aria-pressed={!agent}
+                title="AI mode · answers, reasoning and creation without taking actions"
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  !agent
+                    ? 'bg-white/[0.12] text-white shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-200'
+                }`}
+              >
+                <SparkIcon width={13} height={13} />
+                AI
+              </button>
+              <button
+                type="button"
+                onClick={() => { if (current.tools) setAgent(true); }}
+                disabled={!current.tools}
+                aria-pressed={agent && current.tools}
+                title={current.tools ? 'Agent mode · plans tasks and uses enabled tools, with approval for sensitive actions' : `${current.name} cannot use tools. Choose a tool-capable model to enable Agent mode.`}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-35 ${
+                  agent && current.tools
+                    ? 'bg-cyan-300 text-slate-950 shadow-[0_0_18px_-6px_rgba(34,211,238,0.75)]'
+                    : 'text-zinc-500 hover:text-zinc-200'
+                }`}
+              >
+                <WrenchIcon width={13} height={13} />
+                Agent
+              </button>
+            </div>
             <button
               onClick={() => setDevicesOpen(true)}
               aria-label="Devices"
@@ -876,6 +987,16 @@ export default function ChatPage() {
               className="rounded-xl border border-white/10 p-2 text-zinc-300 transition hover:bg-white/10 hover:text-white"
             >
               <LaptopIcon width={16} height={16} />
+            </button>
+            <button
+              onClick={() => setCommandOpen(true)}
+              aria-label="Open command palette"
+              title="Command palette · Ctrl/⌘ K"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-2.5 py-2 text-xs text-zinc-400 transition hover:border-cyan-300/25 hover:bg-white/[0.06] hover:text-white"
+            >
+              <SparkIcon width={14} height={14} />
+              <span className="hidden xl:inline">Commands</span>
+              <kbd className="hidden rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 sm:inline">⌘K</kbd>
             </button>
             <AlarmsButton />
             <ThemeButton />
@@ -903,10 +1024,18 @@ export default function ChatPage() {
           </div>
         </header>
 
+        {agent && current.tools && (
+          <div className="mx-auto mt-3 flex w-[calc(100%-2rem)] max-w-3xl items-center gap-2 rounded-2xl border border-cyan-300/15 bg-gradient-to-r from-cyan-400/[0.08] via-white/[0.025] to-violet-400/[0.06] px-3.5 py-2.5 text-xs text-zinc-300 shadow-[0_10px_40px_-25px_rgba(34,211,238,0.35)]">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-cyan-200/20 bg-cyan-300/10 text-cyan-200"><WrenchIcon width={14} height={14} /></span>
+            <span className="min-w-0 flex-1"><b className="text-cyan-100">Agent workspace</b><span className="hidden sm:inline"> · Can research, work with files and run approved actions on connected devices.</span></span>
+            {godmode && <span className="rounded-lg border border-violet-300/20 bg-violet-300/10 px-2 py-1 font-semibold text-violet-200">GODMODE</span>}
+            <button onClick={() => setDevicesOpen(true)} className="shrink-0 rounded-lg border border-white/10 px-2.5 py-1.5 font-medium text-zinc-200 transition hover:bg-white/10">Devices</button>
+          </div>
+        )}
         {godmode && (
-          <div className="mx-auto mt-3 flex w-full max-w-3xl items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/[0.07] px-3 py-2 text-xs text-violet-100">
+          <div className="mx-auto mt-2 flex w-[calc(100%-2rem)] max-w-3xl items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/[0.07] px-3 py-2 text-xs text-violet-100">
             <SparkIcon width={14} height={14} />
-            <span className="flex-1">Godmode is on · task planning, available tools and verification enabled</span>
+            <span className="flex-1">Godmode is on · plan, execute and verify complex tasks (up to {MAX_STEPS} tool rounds).</span>
             <button onClick={() => setGodmode(false)} className="text-violet-200/70 transition hover:text-white">Turn off</button>
           </div>
         )}
@@ -927,18 +1056,22 @@ export default function ChatPage() {
                 </button>
               </p>
 
-              <div className="mt-9 grid w-full gap-2.5 sm:grid-cols-2">
-                {(agent && current.tools ? [...SUGGESTIONS.slice(0, 2), ...ACTION_SUGGESTIONS.slice(0, 6)] : SUGGESTIONS).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left text-sm text-zinc-300 transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.06] hover:text-white"
-                  >
-                    <SparkIcon width={16} height={16} className="mt-0.5 shrink-0 text-cyan-300/70 transition group-hover:text-cyan-300" />
-                    {s}
-                  </button>
-                ))}
-              </div>
+              {agent && current.tools ? (
+                <AgentWelcome onPrompt={(prompt) => send(prompt)} onDevices={() => setDevicesOpen(true)} />
+              ) : (
+                <div className="mt-9 grid w-full gap-2.5 sm:grid-cols-2">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left text-sm text-zinc-300 transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.06] hover:text-white"
+                    >
+                      <SparkIcon width={16} height={16} className="mt-0.5 shrink-0 text-cyan-300/70 transition group-hover:text-cyan-300" />
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-8">
@@ -1020,6 +1153,7 @@ export default function ChatPage() {
         )}
         <Composer
           loading={loading || uploading}
+          uploading={uploading}
           placeholder={`Message ${aiName ?? current.name}…`}
           onSend={send}
           onStop={stop}
