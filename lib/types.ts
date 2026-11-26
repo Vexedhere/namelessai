@@ -17,6 +17,8 @@ export type Message = {
   id: string;
   role: Role;
   content: string;
+  /** extracted text from files attached to this user turn; kept out of the visible bubble */
+  context?: string;
   /** model id that produced an assistant message */
   model?: string;
   /** set when the request failed; the text is shown to the user */
