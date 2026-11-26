@@ -41,6 +41,7 @@ export const VOICE_LANGS = [
   { code: 'en-US', label: 'English (US)' },
   { code: 'en-GB', label: 'English (UK)' },
   { code: 'hi-IN', label: 'हिन्दी (Hindi)' },
+  { code: 'te-IN', label: 'తెలుగు (Telugu)' },
   { code: 'es-ES', label: 'Español' },
   { code: 'fr-FR', label: 'Français' },
   { code: 'de-DE', label: 'Deutsch' },
