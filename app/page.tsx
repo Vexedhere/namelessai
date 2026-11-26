@@ -20,6 +20,7 @@ import { NameAiModal } from '@/components/NameAiModal';
 import { cleanAiName, fetchAccount, pushData, pushSettings } from '@/lib/account';
 import { hydrateStore, resetStore, setStorePusher } from '@/lib/store';
 import { DEFAULT_THEME, applyTheme, getCurrentTheme } from '@/lib/theme';
+import { AgentWelcome } from '@/components/AgentWelcome';
 import { VoiceBar } from '@/components/VoiceBar';
 import { VoiceHUD } from '@/components/VoiceHUD';
 import { greetingFor, namedLine, parseSpokenName } from '@/lib/hud';
@@ -918,10 +919,18 @@ export default function ChatPage() {
           </div>
         </header>
 
+        {agent && current.tools && (
+          <div className="mx-auto mt-3 flex w-[calc(100%-2rem)] max-w-3xl items-center gap-2 rounded-2xl border border-cyan-300/15 bg-gradient-to-r from-cyan-400/[0.08] via-white/[0.025] to-violet-400/[0.06] px-3.5 py-2.5 text-xs text-zinc-300 shadow-[0_10px_40px_-25px_rgba(34,211,238,0.35)]">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-cyan-200/20 bg-cyan-300/10 text-cyan-200"><WrenchIcon width={14} height={14} /></span>
+            <span className="min-w-0 flex-1"><b className="text-cyan-100">Agent workspace</b><span className="hidden sm:inline"> · Can research, work with files and run approved actions on connected devices.</span></span>
+            {godmode && <span className="rounded-lg border border-violet-300/20 bg-violet-300/10 px-2 py-1 font-semibold text-violet-200">GODMODE</span>}
+            <button onClick={() => setDevicesOpen(true)} className="shrink-0 rounded-lg border border-white/10 px-2.5 py-1.5 font-medium text-zinc-200 transition hover:bg-white/10">Devices</button>
+          </div>
+        )}
         {godmode && (
-          <div className="mx-auto mt-3 flex w-full max-w-3xl items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/[0.07] px-3 py-2 text-xs text-violet-100">
+          <div className="mx-auto mt-2 flex w-[calc(100%-2rem)] max-w-3xl items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/[0.07] px-3 py-2 text-xs text-violet-100">
             <SparkIcon width={14} height={14} />
-            <span className="flex-1">Godmode is on · task planning, available tools and verification enabled</span>
+            <span className="flex-1">Godmode is on · plan, execute and verify complex tasks (up to {MAX_STEPS} tool rounds).</span>
             <button onClick={() => setGodmode(false)} className="text-violet-200/70 transition hover:text-white">Turn off</button>
           </div>
         )}
@@ -942,18 +951,22 @@ export default function ChatPage() {
                 </button>
               </p>
 
-              <div className="mt-9 grid w-full gap-2.5 sm:grid-cols-2">
-                {(agent && current.tools ? [...SUGGESTIONS.slice(0, 2), ...ACTION_SUGGESTIONS.slice(0, 6)] : SUGGESTIONS).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left text-sm text-zinc-300 transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.06] hover:text-white"
-                  >
-                    <SparkIcon width={16} height={16} className="mt-0.5 shrink-0 text-cyan-300/70 transition group-hover:text-cyan-300" />
-                    {s}
-                  </button>
-                ))}
-              </div>
+              {agent && current.tools ? (
+                <AgentWelcome onPrompt={(prompt) => send(prompt)} onDevices={() => setDevicesOpen(true)} />
+              ) : (
+                <div className="mt-9 grid w-full gap-2.5 sm:grid-cols-2">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left text-sm text-zinc-300 transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.06] hover:text-white"
+                    >
+                      <SparkIcon width={16} height={16} className="mt-0.5 shrink-0 text-cyan-300/70 transition group-hover:text-cyan-300" />
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-8">
