@@ -5,7 +5,7 @@ import { TOOL_NAMES } from './toolDefs';
 import type { ApiMessage, StreamEvent } from './types';
 
 export const MAX_MESSAGES = 60; // tool calls + results count as messages
-export const MAX_CHARS_PER_MESSAGE = 32_000;
+export const MAX_CHARS_PER_MESSAGE = 64_000;
 export const MAX_TOOL_ARG_CHARS = 8_000;
 export const MAX_TOOL_RESULT_CHARS = 8_000;
 
