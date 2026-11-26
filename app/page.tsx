@@ -891,6 +891,7 @@ export default function ChatPage() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onNew={newChat}
+        agentMode={godmode}
         onAgentMode={() => {
           const selected = getModel(model);
           if (!selected.tools) setModel(DEFAULT_MODEL_ID);
@@ -1000,8 +1001,8 @@ export default function ChatPage() {
         {godmode && (
           <div className="mx-auto mt-3 flex w-full max-w-3xl items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/[0.07] px-3 py-2 text-xs text-violet-100">
             <SparkIcon width={14} height={14} />
-            <span className="flex-1">Godmode is on · task planning, available tools and verification enabled</span>
-            <button onClick={() => setGodmode(false)} className="text-violet-200/70 transition hover:text-white">Turn off</button>
+            <span className="flex-1">Agent Mode active · plan, execute and verify with up to 20 tool steps</span>
+            <button onClick={() => setGodmode(false)} className="text-violet-200/70 transition hover:text-white">Exit Agent Mode</button>
           </div>
         )}
         <div ref={scrollRef} onScroll={onScroll} className="scroll-thin flex-1 overflow-y-auto">
