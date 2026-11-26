@@ -717,6 +717,8 @@ export const TOOL_LABELS: Record<string, string> = {
   show_notification: 'Sending notification',
   read_clipboard: 'Reading clipboard',
   speak_aloud: 'Speaking aloud',
+  generate_pdf: 'Designing PDF',
+  create_spreadsheet: 'Building spreadsheet',
   save_file: 'Saving file',
   open_app: 'Opening app',
   app_control: 'Controlling app',
