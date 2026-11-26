@@ -45,20 +45,7 @@ const SUGGESTIONS = [
   'Write a Supabase row-level-security policy for a notes app',
   'Review my API design and suggest improvements',
 ];
-const ACTION_SUGGESTIONS = [
-  'Who are the founders and leaders of Nameless Labs?',
-  'Wake me up at 6:30 tomorrow and start a 10 minute timer',
-  'Draft an email to my team moving Friday’s standup to 11am',
-  'Convert 2,500 USD to INR and 5 km to miles',
-  'Add “send invoice” to my tasks, then show my to-do list',
-  'What time is it in Tokyo and New York right now?',
-  'Switch the theme to Ember',
-  'Generate a strong 20-character password and copy it',
-  'How much battery do I have, and am I online?',
-  'Turn the volume down to 30 and open Spotify',
-  'Take a screenshot and save it',
-  'Show me walking directions to the nearest coffee shop',
-];
+
 
 const uid = () =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -117,7 +104,6 @@ export default function ChatPage() {
   voiceRef.current = voice;
 
   useEffect(() => setVoiceLang(defaultVoiceLang()), []);
-  const toggleAgent = () => setAgent((a) => !a);
   const changeVoiceLang = (l: string) => setVoiceLang(l);
 
   /** Resolves the tool call that is waiting on the email confirmation card. */
