@@ -824,6 +824,7 @@ export default function ChatPage() {
         godmode={godmode}
         onExport={exportChat}
         hasChat={!!active?.messages.length}
+        toolsAvailable={current.tools}
       />
       <AuthModal open={authOpen && !user} onClose={() => setAuthOpen(false)} />
       <NameAiModal
