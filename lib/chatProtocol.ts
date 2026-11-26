@@ -1,4 +1,4 @@
-// Wire-protocol helpers for /api/chat: request sanitising and the OpenRouter-SSE → NDJSON converter.
+// Wire-protocol helpers for /api/chat: request sanitising and the Gemini-compatible SSE → NDJSON converter.
 // Kept out of the route file so they can be unit-tested.
 
 import { TOOL_NAMES } from './toolDefs';
@@ -95,7 +95,7 @@ export function sanitizeMessages(input: unknown): ApiMessage[] | null {
   return repaired.length ? repaired : null;
 }
 
-/** Turns OpenRouter's SSE stream into NDJSON events: text deltas, then (if any) the complete tool calls. */
+/** Turns the Gemini OpenAI-compatible SSE stream into NDJSON events: text deltas, then (if any) the complete tool calls. */
 export function sseToEventStream(upstream: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
   const reader = upstream.getReader();
   let buffer = '';
