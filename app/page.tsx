@@ -69,6 +69,7 @@ export default function ChatPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [model, setModel] = useState(DEFAULT_MODEL_ID);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -529,9 +530,32 @@ export default function ChatPage() {
   );
 
   const send = useCallback(
-    (text: string) => {
-      if (loading) return;
-      const userMsg: Message = { id: uid(), role: 'user', content: text };
+    async (text: string, files: File[] = []) => {
+      if (loading || uploading) return;
+      let context = '';
+      if (files.length) {
+        setUploading(true);
+        try {
+          const form = new FormData();
+          files.slice(0, 5).forEach((file) => form.append('files', file));
+          const response = await fetch('/api/files', { method: 'POST', body: form });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data?.error || 'File upload failed.');
+          let remaining = 100_000;
+          context = (data.documents ?? []).map((doc: { name: string; type: string; text: string }) => {
+            const textPart = String(doc.text ?? '').slice(0, remaining);
+            remaining -= textPart.length;
+            return `--- FILE: ${String(doc.name).slice(0, 180)} (${doc.type}) ---\\n${textPart}`;
+          }).filter(Boolean).join('\\n\\n');
+          if (!context) throw new Error('No readable text was found in the uploaded files.');
+        } catch (error) {
+          window.alert(error instanceof Error ? error.message : 'Could not read the uploaded files.');
+          setUploading(false);
+          return;
+        }
+        setUploading(false);
+      }
+      const userMsg: Message = { id: uid(), role: 'user', content: text, ...(context ? { context } : {}) };
       let chatId = activeId;
 
       if (!chatId || !chats.some((c) => c.id === chatId)) {
@@ -550,7 +574,7 @@ export default function ChatPage() {
         void run(chatId, [...(active?.messages ?? []), userMsg], model);
       }
     },
-    [active, activeId, chats, loading, model, run],
+    [active, activeId, chats, loading, uploading, model, run],
   );
 
   // spoken input: a yes/no while an email awaits confirmation, otherwise a normal message
@@ -967,7 +991,7 @@ export default function ChatPage() {
           </div>
         )}
         <Composer
-          loading={loading}
+          loading={loading || uploading}
           placeholder={`Message ${aiName ?? current.name}…`}
           onSend={send}
           onStop={stop}
