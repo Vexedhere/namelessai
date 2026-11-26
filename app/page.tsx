@@ -541,12 +541,12 @@ export default function ChatPage() {
           const response = await fetch('/api/files', { method: 'POST', body: form });
           const data = await response.json();
           if (!response.ok) throw new Error(data?.error || 'File upload failed.');
-          let remaining = 100_000;
+          let remaining = 28_000;
           context = (data.documents ?? []).map((doc: { name: string; type: string; text: string }) => {
             const textPart = String(doc.text ?? '').slice(0, remaining);
             remaining -= textPart.length;
-            return `--- FILE: ${String(doc.name).slice(0, 180)} (${doc.type}) ---\\n${textPart}`;
-          }).filter(Boolean).join('\\n\\n');
+            return `--- FILE: ${String(doc.name).slice(0, 180)} (${doc.type}) ---\n${textPart}`;
+          }).filter(Boolean).join('\n\n');
           if (!context) throw new Error('No readable text was found in the uploaded files.');
         } catch (error) {
           window.alert(error instanceof Error ? error.message : 'Could not read the uploaded files.');
