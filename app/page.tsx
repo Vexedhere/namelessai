@@ -905,6 +905,16 @@ export default function ChatPage() {
             >
               <LaptopIcon width={16} height={16} />
             </button>
+            <button
+              onClick={() => setCommandOpen(true)}
+              aria-label="Open command palette"
+              title="Command palette · Ctrl/⌘ K"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-2.5 py-2 text-xs text-zinc-400 transition hover:border-cyan-300/25 hover:bg-white/[0.06] hover:text-white"
+            >
+              <SparkIcon width={14} height={14} />
+              <span className="hidden xl:inline">Commands</span>
+              <kbd className="hidden rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 sm:inline">⌘K</kbd>
+            </button>
             <AlarmsButton />
             <ThemeButton />
             <span className="hidden items-center gap-2 text-xs text-zinc-500 sm:flex">
