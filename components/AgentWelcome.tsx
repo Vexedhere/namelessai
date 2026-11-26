@@ -10,9 +10,9 @@ const CAPABILITIES = [
 ];
 
 const TASKS = [
-  { label: 'PDF → answer key', prompt: 'Create a complete answer key for the attached PDF. Explain each answer clearly, organise it by question number, and generate a polished downloadable PDF.' },
-  { label: 'Understand a document', prompt: 'Read the attached PDF carefully. Summarise the key ideas, extract important facts, identify anything unclear, and give me the most useful takeaways.' },
-  { label: 'Research a topic', prompt: 'Research this topic thoroughly. Compare reliable sources, identify important facts and disagreements, then create a structured report with sources: ' },
+  { label: 'PDF → answer key', prompt: 'I am going to attach a question paper. Solve every question, explain each answer clearly, organise it by question number, and generate a polished downloadable answer-key PDF. Ask me to attach the paper if it is not here yet.' },
+  { label: 'Understand a document', prompt: 'I am going to attach a PDF. Read it carefully, summarise the key ideas, extract important facts, identify anything unclear, and give me the most useful takeaways. Ask me to attach it if it is not here yet.' },
+  { label: 'Research a topic', prompt: 'Research the latest developments in artificial intelligence. Compare reliable sources, identify important facts and disagreements, then create a structured report with citations.' },
   { label: 'Control my computer', prompt: 'Check whether my desktop companion is connected. If it is, tell me the available controls and take a screenshot of my desktop.' },
 ];
 
