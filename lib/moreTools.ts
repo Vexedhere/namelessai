@@ -302,8 +302,196 @@ function focusSession(a: Record<string, unknown>): ToolOutcome {
   return ok(`Focus session started: ${work} min${label ? ` on "${label}"` : ''}${brk ? `, then a ${brk} min break` : ''}. Timers ring while this page stays open.`);
 }
 
+
+async function generateProfessionalPdf(a: Record<string, unknown>): Promise<ToolOutcome> {
+  const title = str(a.title, 180);
+  if (!title) return bad('A document title is required.');
+  if (!Array.isArray(a.sections) || a.sections.length === 0) return bad('Add at least one document section.');
+  if (a.sections.length > 100) return bad('A PDF can contain at most 100 content blocks.');
+  const themeName = str(a.theme, 20) || 'navy';
+  const palettes: Record<string, { accent: [number, number, number]; ink: [number, number, number]; muted: [number, number, number]; pale: [number, number, number] }> = {
+    navy: { accent: [27, 76, 130], ink: [31, 41, 55], muted: [103, 116, 135], pale: [238, 244, 250] },
+    teal: { accent: [13, 125, 125], ink: [31, 41, 55], muted: [103, 116, 135], pale: [233, 247, 245] },
+    violet: { accent: [106, 76, 160], ink: [38, 35, 53], muted: [112, 106, 128], pale: [244, 240, 250] },
+    minimal: { accent: [65, 75, 87], ink: [30, 35, 42], muted: [115, 120, 128], pale: [246, 247, 248] },
+    warm: { accent: [166, 91, 48], ink: [55, 43, 35], muted: [130, 112, 98], pale: [250, 243, 235] },
+  };
+  const palette = palettes[themeName] || palettes.navy;
+  const { jsPDF } = await import('jspdf');
+  const autoTable = (await import('jspdf-autotable')).default;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const left = 19, right = 19, top = 22, bottom = 21;
+  const contentW = pageW - left - right;
+  const author = str(a.author, 100) || 'Nameless Labs';
+  const subtitle = str(a.subtitle, 220);
+  let y = 0;
+  const setInk = () => doc.setTextColor(...palette.ink);
+  const ensure = (height: number) => {
+    if (y + height > pageH - bottom) { doc.addPage(); y = top; }
+  };
+  const paragraph = (value: string, size = 10.5, indent = 0) => {
+    const text = value.trim();
+    if (!text) return;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(size);
+    setInk();
+    const lines = doc.splitTextToSize(text, contentW - indent);
+    const lineH = size * 0.48;
+    for (const line of lines) {
+      ensure(lineH + 2);
+      doc.text(line, left + indent, y);
+      y += lineH;
+    }
+    y += 3;
+  };
+
+  // Refined title area: generous whitespace, accent rule and clear metadata.
+  doc.setFillColor(...palette.accent);
+  doc.rect(0, 0, pageW, 5, 'F');
+  y = 29;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(25);
+  doc.setTextColor(...palette.accent);
+  const titleLines = doc.splitTextToSize(title, contentW);
+  doc.text(titleLines, left, y);
+  y += titleLines.length * 11 + 3;
+  if (subtitle) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(...palette.muted);
+    const subLines = doc.splitTextToSize(subtitle, contentW);
+    doc.text(subLines, left, y);
+    y += subLines.length * 5.5 + 2;
+  }
+  doc.setDrawColor(...palette.accent);
+  doc.setLineWidth(0.8);
+  doc.line(left, y + 2, left + 28, y + 2);
+  y += 13;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...palette.muted);
+  doc.text(author, left, y);
+  doc.text(new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }), pageW - right, y, { align: 'right' });
+  y += 13;
+
+  for (const raw of a.sections as unknown[]) {
+    if (!raw || typeof raw !== 'object') continue;
+    const section = raw as Record<string, unknown>;
+    const type = str(section.type, 20);
+    const heading = str(section.title, 180);
+    if (type === 'page_break') { doc.addPage(); y = top; continue; }
+    if (type === 'divider') {
+      ensure(12); doc.setDrawColor(220, 225, 231); doc.setLineWidth(0.35); doc.line(left, y, pageW - right, y); y += 9; continue;
+    }
+    if (type === 'heading') {
+      const text = heading || str(section.text, 180);
+      if (!text) continue;
+      ensure(17);
+      y += 3;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.setTextColor(...palette.accent);
+      const lines = doc.splitTextToSize(text, contentW);
+      doc.text(lines, left, y);
+      y += lines.length * 7 + 4;
+      continue;
+    }
+    if (type === 'paragraph') {
+      if (heading) { ensure(12); doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); setInk(); doc.text(heading, left, y); y += 6; }
+      paragraph(str(section.text, 12000));
+      continue;
+    }
+    if (type === 'quote' || type === 'callout') {
+      const text = str(section.text, 5000);
+      if (!text) continue;
+      doc.setFont('helvetica', type === 'quote' ? 'italic' : 'normal');
+      doc.setFontSize(10);
+      const lines = doc.splitTextToSize(text, contentW - 12);
+      const h = lines.length * 5.2 + (heading ? 15 : 10);
+      ensure(h + 4);
+      doc.setFillColor(...palette.pale);
+      doc.roundedRect(left, y - 4, contentW, h, 2, 2, 'F');
+      doc.setFillColor(...palette.accent);
+      doc.rect(left, y - 4, 1.4, h, 'F');
+      let yy = y + 3;
+      if (heading) { doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...palette.accent); doc.text(heading, left + 7, yy); yy += 6; }
+      doc.setFont('helvetica', type === 'quote' ? 'italic' : 'normal');
+      doc.setFontSize(10);
+      setInk();
+      doc.text(lines, left + 7, yy);
+      y += h + 6;
+      continue;
+    }
+    if (type === 'bullets' || type === 'numbered') {
+      const items = Array.isArray(section.items) ? section.items.slice(0, 80).map(v => str(v, 1200)).filter(Boolean) : [];
+      if (heading) { ensure(12); doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); setInk(); doc.text(heading, left, y); y += 7; }
+      items.forEach((item, index) => {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setInk();
+        const lines = doc.splitTextToSize(item, contentW - 9);
+        const h = lines.length * 5 + 2;
+        ensure(h);
+        doc.setFillColor(...palette.accent);
+        if (type === 'bullets') doc.circle(left + 2, y - 1.1, 0.65, 'F');
+        else { doc.setFont('helvetica', 'bold'); doc.setTextColor(...palette.accent); doc.text(String(index + 1) + '.', left, y); setInk(); }
+        doc.setFont('helvetica', 'normal'); doc.text(lines, left + 7, y);
+        y += h + 1;
+      });
+      y += 3;
+      continue;
+    }
+    if (type === 'table') {
+      const headers = Array.isArray(section.headers) ? section.headers.slice(0, 8).map(v => str(v, 100)) : [];
+      const rows = Array.isArray(section.rows) ? section.rows.slice(0, 200).map(row => Array.isArray(row) ? row.slice(0, headers.length || 8).map(v => str(v, 500)) : []) : [];
+      if (!headers.length) continue;
+      if (heading) { ensure(12); doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); setInk(); doc.text(heading, left, y); y += 6; }
+      autoTable(doc, {
+        startY: y,
+        head: [headers],
+        body: rows,
+        margin: { left, right },
+        theme: 'grid',
+        styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 2.6, textColor: palette.ink, lineColor: [225, 230, 236], lineWidth: 0.15, overflow: 'linebreak' },
+        headStyles: { fillColor: palette.accent, textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [247, 249, 251] },
+        rowPageBreak: 'avoid',
+        didDrawPage: () => { y = top; },
+      });
+      y = (doc as any).lastAutoTable?.finalY ?? y;
+      y += 8;
+    }
+  }
+
+  // Consistent running header/footer with page count, added after all page breaks.
+  const totalPages = doc.getNumberOfPages();
+  for (let page = 1; page <= totalPages; page++) {
+    doc.setPage(page);
+    if (page > 1) {
+      doc.setDrawColor(225, 230, 236);
+      doc.setLineWidth(0.25);
+      doc.line(left, 13, pageW - right, 13);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...palette.muted);
+      doc.text(title.slice(0, 90), left, 10);
+    }
+    doc.setDrawColor(225, 230, 236);
+    doc.line(left, pageH - 14, pageW - right, pageH - 14);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...palette.muted);
+    doc.text(author, left, pageH - 9);
+    doc.text(`Page ${page} of ${totalPages}`, pageW - right, pageH - 9, { align: 'right' });
+  }
+  const base = str(a.filename, 100).replace(/\.pdf$/i, '').replace(/[^\w -]/g, '').trim() || title.replace(/[^\w -]/g, '').trim() || 'nameless-report';
+  doc.save(`${base.slice(0, 80)}.pdf`);
+  return ok(`Created and downloaded "${base}.pdf" (${totalPages} page(s)). It includes structured typography, section hierarchy, page-safe lists, styled tables, and repeating page headers/footers. Note: the built-in PDF font is best for Latin-script text; use plain ASCII transliteration for unsupported scripts.`);
+}
+
 export async function runMoreTool(name: string, a: Record<string, unknown>): Promise<ToolOutcome | null> {
   switch (name) {
+    case 'generate_pdf': return generateProfessionalPdf(a);
     case 'date_calc': return dateCalc(a);
     case 'text_tools': return textTools(a);
     case 'finance_calc': return financeCalc(a);
