@@ -489,9 +489,53 @@ async function generateProfessionalPdf(a: Record<string, unknown>): Promise<Tool
   return ok(`Created and downloaded "${base}.pdf" (${totalPages} page(s)). It includes structured typography, section hierarchy, page-safe lists, styled tables, and repeating page headers/footers. Note: the built-in PDF font is best for Latin-script text; use plain ASCII transliteration for unsupported scripts.`);
 }
 
+
+async function createSpreadsheet(a: Record<string, unknown>): Promise<ToolOutcome> {
+  if (!Array.isArray(a.sheets) || a.sheets.length === 0) return bad('Provide at least one worksheet.');
+  if (a.sheets.length > 12) return bad('A workbook can contain at most 12 worksheets.');
+  const XLSX = await import('xlsx');
+  const workbook = XLSX.utils.book_new();
+  const used = new Set<string>();
+  for (const raw of a.sheets as unknown[]) {
+    if (!raw || typeof raw !== 'object') continue;
+    const sheet = raw as Record<string, unknown>;
+    const headers = Array.isArray(sheet.headers) ? sheet.headers.slice(0, 40).map(v => str(v, 100)) : [];
+    if (!headers.length) continue;
+    const rows = Array.isArray(sheet.rows) ? sheet.rows.slice(0, 5000).map(row =>
+      Array.isArray(row) ? headers.map((_, i) => {
+        const value = row[i];
+        if (typeof value === 'number' || typeof value === 'boolean') return value;
+        if (value === null || value === undefined) return '';
+        return str(value, 2000);
+      }) : headers.map(() => '')
+    ) : [];
+    let name = str(sheet.name, 31).replace(/[\\/?*\[\]:]/g, '').trim() || `Sheet ${workbook.SheetNames.length + 1}`;
+    name = name.slice(0, 31);
+    const base = name;
+    let suffix = 2;
+    while (used.has(name.toLowerCase())) name = `${base.slice(0, 27)} ${suffix++}`;
+    used.add(name.toLowerCase());
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = headers.map((header, index) => {
+      const longest = Math.max(header.length, ...rows.slice(0, 250).map(row => String(row[index] ?? '').length));
+      return { wch: Math.min(48, Math.max(12, longest + 2)) };
+    });
+    ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } }) };
+    ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
+    XLSX.utils.book_append_sheet(workbook, ws, name);
+  }
+  if (!workbook.SheetNames.length) return bad('No valid worksheets were supplied. Each sheet needs at least one header.');
+  workbook.Props = { Title: str(a.title, 180) || 'Nameless Labs Spreadsheet', Author: 'Nameless Labs', Subject: 'AI-generated workbook', CreatedDate: new Date() };
+  const base = str(a.filename, 100).replace(/\.xlsx$/i, '').replace(/[^\w -]/g, '').trim() || 'nameless-workbook';
+  XLSX.writeFile(workbook, `${base.slice(0, 80)}.xlsx`, { compression: true });
+  const rowCount = (a.sheets as unknown[]).reduce((sum, raw) => sum + (raw && typeof raw === 'object' && Array.isArray((raw as Record<string, unknown>).rows) ? ((raw as Record<string, unknown>).rows as unknown[]).length : 0), 0);
+  return ok(`Created and downloaded "${base}.xlsx" with ${workbook.SheetNames.length} worksheet(s) and ${rowCount} data row(s). Headers, filters and automatic column widths are included.`);
+}
+
 export async function runMoreTool(name: string, a: Record<string, unknown>): Promise<ToolOutcome | null> {
   switch (name) {
     case 'generate_pdf': return generateProfessionalPdf(a);
+    case 'create_spreadsheet': return createSpreadsheet(a);
     case 'date_calc': return dateCalc(a);
     case 'text_tools': return textTools(a);
     case 'finance_calc': return financeCalc(a);
