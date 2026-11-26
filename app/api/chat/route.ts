@@ -143,6 +143,20 @@ export async function POST(req: NextRequest) {
   if (visitorError) return jsonError('Could not verify this browser session with moderation.', 503);
   if (visitorCheck?.allowed === false) return jsonError('This browser session has been kicked by Nameless Labs moderation.', 403);
 
+  // Vercel overwrites x-real-ip with the connecting client's address. Check
+  // the IP on the server too, so callers cannot bypass the browser-side guard.
+  const clientIp = (req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0] || '').trim();
+  if (clientIp) {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return jsonError('IP moderation is not configured on the server.', 503);
+    const adminClient = createClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: ipRestricted, error: ipError } = await adminClient.rpc('nl_ip_is_restricted', { p_ip: clientIp });
+    if (ipError) return jsonError('Could not verify network moderation status.', 503);
+    if (ipRestricted === true) return jsonError('This network address is restricted by Nameless Labs moderation.', 403);
+  }
+
   const requiredTier: 'FREE' | 'PLUS' | 'PRO' = modelId === 'quasar-apex' ? 'PRO' : modelId === 'aether-pro' ? 'PLUS' : 'FREE';
   if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);
   if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
