@@ -561,7 +561,7 @@ export const TOOL_DEFS: ToolDef[] = [
     type: 'function',
     function: {
       name: 'create_spreadsheet',
-      description: 'Create and download a real Excel .xlsx workbook. Use for budgets, trackers, schedules, inventories, comparisons and datasets. Supports multiple worksheets, column headers, rows, frozen header rows, filters and sensible automatic column widths. Do not use save_file to create an .xlsx.',
+      description: 'Create and download a real Excel .xlsx workbook. Use for budgets, trackers, schedules, inventories, comparisons and datasets. Supports multiple worksheets, column headers, rows, filters and sensible automatic column widths. Do not use save_file to create an .xlsx.',
       parameters: {
         type: 'object',
         properties: {
