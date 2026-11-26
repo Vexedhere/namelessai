@@ -166,6 +166,7 @@ function pickVoice(lang: string): SpeechSynthesisVoice | null {
 export class SpeechQueue {
   lang = 'en-US';
   rate = 1.05;
+  pitch = 1;
   volume = 1;
   /** specific voice chosen by the user (SpeechSynthesisVoice.voiceURI); empty = automatic */
   voiceURI = '';
@@ -214,6 +215,7 @@ export class SpeechQueue {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = this.lang;
     u.rate = this.rate;
+    u.pitch = this.pitch;
     u.volume = this.volume;
     const chosen = this.voiceURI ? window.speechSynthesis.getVoices().find((x) => x.voiceURI === this.voiceURI) : null;
     const v = chosen ?? pickVoice(this.lang);
