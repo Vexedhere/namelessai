@@ -79,6 +79,7 @@ export default function ChatPage() {
   const syncedRef = useRef<Map<string, number>>(new Map());
   const { user, profile, ready: authReady } = useAuth();
   const userId = user?.id ?? null;
+  const [accessBlocked, setAccessBlocked] = useState<string | null>(null);
 
   // ---- agent actions + voice -------------------------------------------
   const [persona, setPersona] = useState('default');
@@ -211,8 +212,73 @@ export default function ChatPage() {
   }, [userId]);
 
   const abortRef = useRef<AbortController | null>(null);
+  const visitorSessionRef = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickRef = useRef(true);
+
+  // Register the current browser session for moderation visibility. IP capture is
+  // performed directly against Supabase Edge so its trusted edge can see the client IP.
+  useEffect(() => {
+    const sb = getSupabase();
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!sb || !anonKey) return;
+    let sessionId = '';
+    try {
+      sessionId = sessionStorage.getItem('nl_visitor_session') || '';
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        sessionStorage.setItem('nl_visitor_session', sessionId);
+      }
+    } catch {
+      sessionId = crypto.randomUUID();
+    }
+    visitorSessionRef.current = sessionId;
+    let alive = true;
+    const check = async () => {
+      try {
+        const { data, error } = await sb.rpc('nl_visitor_heartbeat', {
+          p_session_id: sessionId,
+          p_name: profile?.name || 'Guest',
+          p_user_agent: navigator.userAgent,
+        });
+        if (!alive) return;
+        if (error || data?.allowed === false) {
+          setAccessBlocked(data?.reason === 'session_kicked'
+            ? 'This browser session was kicked by a Nameless Labs administrator.'
+            : 'Your session could not pass the moderation check.');
+          abortRef.current?.abort();
+          return;
+        }
+        const response = await fetch(
+          (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://nzaelikbjumaidaombmp.supabase.co') + '/functions/v1/ip-guard',
+          {
+            method: 'POST',
+            headers: { apikey: anonKey, Authorization: 'Bearer ' + anonKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId }),
+          },
+        );
+        if (!alive) return;
+        if (response.status === 403) {
+          setAccessBlocked('This network address is restricted by Nameless Labs moderation.');
+          abortRef.current?.abort();
+        } else if (!response.ok) {
+          setAccessBlocked('The moderation service is unavailable. Please try again shortly.');
+          abortRef.current?.abort();
+        }
+      } catch {
+        if (alive) {
+          setAccessBlocked('Could not verify this session with the moderation service.');
+          abortRef.current?.abort();
+        }
+      }
+    };
+    void check();
+    const timer = window.setInterval(() => void check(), 30_000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [userId, profile?.name]);
 
   const active = useMemo(() => chats.find((c) => c.id === activeId) ?? null, [chats, activeId]);
   const messages = active?.messages ?? [];
@@ -464,6 +530,7 @@ export default function ChatPage() {
             voice: !!speaker,
             voiceLang,
             token,
+            visitorSessionId: visitorSessionRef.current ?? undefined,
             signal: ctrl.signal,
             onText: (acc) => {
               curText = acc;
@@ -784,6 +851,19 @@ export default function ChatPage() {
   const firstName = profile?.name.split(/\s+/)[0];
   const current = getModel(model);
   const lastIndex = messages.length - 1;
+
+  if (accessBlocked) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-canvas px-6 text-zinc-100">
+        <section className="w-full max-w-md rounded-2xl border border-white/10 bg-black/30 p-8 text-center shadow-2xl">
+          <div className="mb-4 text-3xl">⛔</div>
+          <h1 className="text-xl font-semibold">Nameless Labs access restricted</h1>
+          <p className="mt-3 text-sm leading-6 text-zinc-400">{accessBlocked}</p>
+          <button className="mt-6 rounded-xl bg-white/10 px-5 py-2 text-sm hover:bg-white/15" onClick={() => location.reload()}>Try again</button>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <div className="relative flex h-[100dvh] overflow-hidden bg-canvas text-zinc-100 transition-colors duration-500">
