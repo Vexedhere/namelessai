@@ -16,6 +16,7 @@ export function Sidebar({
   open,
   onClose,
   onNew,
+  onAgentMode,
   onSelect,
   onDelete,
   profile,
@@ -30,6 +31,7 @@ export function Sidebar({
   open: boolean;
   onClose: () => void;
   onNew: () => void;
+  onAgentMode: () => void;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   profile: Profile | null;
@@ -80,6 +82,25 @@ export function Sidebar({
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm font-medium text-white transition hover:border-cyan-400/40 hover:bg-white/[0.09]"
           >
             <PlusIcon width={16} height={16} /> New chat
+          </button>
+        </div>
+
+        <div className="px-4 pb-2">
+          <button
+            type="button"
+            onClick={() => {
+              onAgentMode();
+              onClose();
+            }}
+            className="group flex w-full items-center gap-3 rounded-xl border border-violet-300/25 bg-gradient-to-r from-violet-500/[0.14] to-cyan-400/[0.08] px-3.5 py-3 text-left transition hover:border-violet-300/45 hover:from-violet-500/20 hover:to-cyan-400/[0.13]"
+            aria-label="Open Agent Mode"
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-violet-300/25 bg-violet-400/10 text-lg text-violet-200">✧</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-violet-100">Agent Mode</span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-zinc-400">Plan · use tools · verify results</span>
+            </span>
+            <span className="rounded-md border border-violet-300/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-violet-200/80">Beta</span>
           </button>
         </div>
 
