@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
   const payloadMessages = [{ role: 'system', content: system }, ...messages];
 
   // Google Gemini OpenAI-compatible Chat Completions endpoint.
-  // This keeps the existing streaming + function-call wire format while removing OpenRouter.
+  // This keeps the existing streaming + function-call wire format.
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey || apiKey === 'your_gemini_api_key_here') {
     return jsonError(
