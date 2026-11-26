@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-const MAX_FILE_BYTES = 8 * 1024 * 1024;
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const MAX_TEXT_CHARS = 100_000;
 const MAX_ZIP_ENTRIES = 40;
 const MAX_ZIP_ENTRY_CHARS = 30_000;
@@ -29,11 +29,11 @@ export async function POST(req: NextRequest) {
 
   const documents: { name: string; type: string; text: string; size: number }[] = [];
   const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
-  if (totalBytes > 20 * 1024 * 1024) return Response.json({ error: 'The combined upload limit is 20 MB.' }, { status: 413 });
+  if (totalBytes > 4 * 1024 * 1024) return Response.json({ error: 'The combined upload limit is 4 MB per message on this deployment. Try fewer or smaller files.' }, { status: 413 });
   for (const file of files) {
     const ext = extension(file.name);
     if (!ALLOWED.has(ext)) return Response.json({ error: `Unsupported file type: ${file.name}` }, { status: 415 });
-    if (file.size > MAX_FILE_BYTES) return Response.json({ error: `${file.name} exceeds the 8 MB limit.` }, { status: 413 });
+    if (file.size > MAX_FILE_BYTES) return Response.json({ error: `${file.name} exceeds the 4 MB per-file limit.` }, { status: 413 });
     try {
       const bytes = Buffer.from(await file.arrayBuffer());
       let text = '';
