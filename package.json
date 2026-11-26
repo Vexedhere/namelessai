@@ -21,7 +21,9 @@
     "pdf-parse": "1.1.4",
     "jszip": "^3.10.1",
     "xlsx": "^0.18.5",
-    "tesseract.js": "^6.0.1"
+    "tesseract.js": "^6.0.1",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
