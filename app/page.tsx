@@ -711,10 +711,10 @@ export default function ChatPage() {
         const label = message.role === 'user' ? 'YOU' : (message.model ? getModel(message.model).name.toUpperCase() : 'NAMELESSAI');
         const raw = [message.content, ...(message.toolCalls ?? []).map((call) => `[${call.name}] ${call.result ?? call.status}`)].filter(Boolean).join('\n\n');
         const plain = raw
-          .replace(/```[\\s\\S]*?```/g, '[Code block]')
-          .replace(/!\\[([^\\]]*)\\]\\([^)]*\\)/g, '$1')
-          .replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '$1 ($2)')
-          .replace(/^#{1,6}\\s+/gm, '')
+          .replace(/```[\s\S]*?```/g, '[Code block]')
+          .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)')
+          .replace(/^#{1,6}\s+/gm, '')
           .replace(/[*_~`]/g, '')
           .trim();
         if (!plain) continue;
