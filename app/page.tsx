@@ -546,7 +546,7 @@ export default function ChatPage() {
           const response = await fetch('/api/files', { method: 'POST', body: form });
           const data = await response.json();
           if (!response.ok) throw new Error(data?.error || 'File upload failed.');
-          let remaining = 28_000;
+          let remaining = Math.max(0, 28_000 - text.length);
           context = (data.documents ?? []).map((doc: { name: string; type: string; text: string }) => {
             const textPart = String(doc.text ?? '').slice(0, remaining);
             remaining -= textPart.length;
