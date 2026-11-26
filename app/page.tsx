@@ -219,6 +219,7 @@ export default function ChatPage() {
   // Register the current browser session for moderation visibility. IP capture is
   // performed directly against Supabase Edge so its trusted edge can see the client IP.
   useEffect(() => {
+    setAccessBlocked(null);
     const sb = getSupabase();
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!sb || !anonKey) return;
