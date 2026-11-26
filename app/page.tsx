@@ -245,7 +245,9 @@ export default function ChatPage() {
         if (error || data?.allowed === false) {
           setAccessBlocked(data?.reason === 'session_kicked'
             ? 'This browser session was kicked by a Nameless Labs administrator.'
-            : 'Your session could not pass the moderation check.');
+            : data?.reason === 'auth_session_revoked'
+              ? 'Your signed-in session was revoked by a Nameless Labs administrator.'
+              : 'Your session could not pass the moderation check.');
           abortRef.current?.abort();
           return;
         }
