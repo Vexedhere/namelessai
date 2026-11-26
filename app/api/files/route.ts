@@ -3,10 +3,11 @@ import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import JSZip from 'jszip';
 import * as XLSX from 'xlsx';
+import { createWorker } from 'tesseract.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const MAX_TEXT_CHARS = 100_000;
@@ -14,7 +15,8 @@ const MAX_ZIP_ENTRIES = 40;
 const MAX_ZIP_ENTRY_CHARS = 30_000;
 const SKIP_ZIP_PATH = /(^|\/)(node_modules|\.git|dist|build|vendor|\.next)(\/|$)/i;
 const TEXT_EXTENSIONS = new Set(['txt','md','csv','json','xml','html','css','js','jsx','ts','tsx','py','java','c','cpp','go','rs','sql','yaml','yml','toml','log','sh','env','ini','conf','graphql','gql','vue','svelte']);
-const ALLOWED = new Set([...TEXT_EXTENSIONS, 'pdf','docx','xlsx','xls','pptx','zip']);
+const IMAGE_EXTENSIONS = new Set(['png','jpg','jpeg','webp','bmp','tif','tiff']);
+const ALLOWED = new Set([...TEXT_EXTENSIONS, ...IMAGE_EXTENSIONS, 'pdf','docx','xlsx','xls','pptx','zip']);
 
 function extension(name: string) {
   return name.split('.').pop()?.toLowerCase() ?? '';
@@ -37,7 +39,15 @@ export async function POST(req: NextRequest) {
     try {
       const bytes = Buffer.from(await file.arrayBuffer());
       let text = '';
-      if (ext === 'pdf') {
+      if (IMAGE_EXTENSIONS.has(ext)) {
+        const worker = await createWorker('eng');
+        try {
+          const result = await worker.recognize(bytes);
+          text = result.data.text;
+        } finally {
+          await worker.terminate();
+        }
+      } else if (ext === 'pdf') {
         const parsed = await pdfParse(bytes);
         text = parsed.text;
       } else if (ext === 'docx') {
@@ -77,7 +87,7 @@ export async function POST(req: NextRequest) {
         text = bytes.toString('utf8');
       }
       text = text.replace(/\u0000/g, '').trim();
-      if (!text) return Response.json({ error: ext === 'pdf' ? `${file.name} has no selectable text. It may be a scanned PDF; OCR is needed to read it.` : `${file.name} contains no readable text.` }, { status: 422 });
+      if (!text) return Response.json({ error: ext === 'pdf' ? `${file.name} has no selectable text. Scanned-PDF OCR is not supported yet; upload page images or an OCR-processed PDF.` : IMAGE_EXTENSIONS.has(ext) ? `No readable text was detected in ${file.name}. Try a clearer image.` : `${file.name} contains no readable text.` }, { status: 422 });
       documents.push({ name: file.name.slice(0, 180), type: ext, text: text.slice(0, MAX_TEXT_CHARS), size: file.size });
     } catch (error) {
       console.error('File extraction failed:', file.name, error);
