@@ -136,6 +136,13 @@ export async function POST(req: NextRequest) {
 
   const modelId = typeof rawModel === 'string' && MODEL_IDS.has(rawModel) ? rawModel : DEFAULT_MODEL_ID;
 
+  const messages = sanitizeMessages(rawMessages);
+  if (!messages) return jsonError('Send at least one non-empty user message.', 400);
+
+  const requiredTier: 'FREE' | 'PLUS' | 'PRO' = modelId === 'quasar-apex' ? 'PRO' : modelId === 'aether-pro' ? 'PLUS' : 'FREE';
+  if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);
+  if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
+
   try {
     const limit = await checkAiRateLimit(req, authUser?.id);
     if (!limit.allowed) {
@@ -148,12 +155,6 @@ export async function POST(req: NextRequest) {
     console.error('NamelessAI rate-limit check failed:', err);
     return jsonError('Public AI protection is not configured yet. Apply supabase/ai-rate-limits.sql and set SUPABASE_SERVICE_ROLE_KEY before enabling chat.', 503);
   }
-  const messages = sanitizeMessages(rawMessages);
-  if (!messages) return jsonError('Send at least one non-empty user message.', 400);
-
-  const requiredTier: 'FREE' | 'PLUS' | 'PRO' = modelId === 'quasar-apex' ? 'PRO' : modelId === 'aether-pro' ? 'PLUS' : 'FREE';
-  if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);
-  if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
 
   const useTools = rawTools === true;
   const activeTools = TOOL_DEFS.filter((t) => t.function.name !== 'web_search' || !!process.env.TAVILY_API_KEY?.trim());
