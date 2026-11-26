@@ -194,6 +194,11 @@ function HUDInner({
   /* ---- speaker settings ---------------------------------------------------- */
   useEffect(() => {
     if (!canSpeak) return;
+    // Apply the default named profile on first open; each profile adjusts pitch/rate
+    // and selects a matching installed system voice when the browser provides one.
+    const initial = VOICE_PROFILES[0];
+    getSpeaker().pitch = initial.pitch;
+    getSpeaker().rate = initial.rate;
     const q = getSpeaker();
     setRate(q.rate);
     setVolume(q.volume || 1);
@@ -769,6 +774,12 @@ function HUDInner({
                   ))}
                 </select>
               </label>
+            )}
+            {canSpeak && (
+              <div className="flex items-center justify-between gap-3 sm:col-span-2">
+                <p className="text-xs text-zinc-500">Preview the selected voice personality before using it.</p>
+                <button onClick={() => getSpeaker().say('Hello. I am NamelessAI. Your selected voice is ready.')} className="shrink-0 rounded-xl border border-[rgb(var(--hud)/0.4)] px-3 py-2 text-xs font-medium text-[rgb(var(--hud))] transition hover:bg-[rgb(var(--hud)/0.12)]">Preview voice</button>
+              </div>
             )}
             {canSpeak && (
               <label className="grid gap-1 text-xs text-zinc-400">
