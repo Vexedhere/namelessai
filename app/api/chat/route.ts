@@ -6,6 +6,7 @@ import { getServerUser, getUserTier } from '@/lib/serverAuth';
 import { teamPrompt } from '@/lib/team';
 import { PERSONAS, PERSONA_IDS } from '@/lib/personas';
 import { APP_CODENAME, APP_VERSION_LABEL } from '@/lib/version';
+import { checkAiRateLimit } from '@/lib/aiRateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -134,6 +135,19 @@ export async function POST(req: NextRequest) {
   } = (body ?? {}) as Record<string, unknown>;
 
   const modelId = typeof rawModel === 'string' && MODEL_IDS.has(rawModel) ? rawModel : DEFAULT_MODEL_ID;
+
+  try {
+    const limit = await checkAiRateLimit(req, authUser?.id);
+    if (!limit.allowed) {
+      return new Response(JSON.stringify({ error: 'NamelessAI usage limit reached. Please wait and try again later.' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Retry-After': String(limit.retryAfterSeconds) },
+      });
+    }
+  } catch (err) {
+    console.error('NamelessAI rate-limit check failed:', err);
+    return jsonError('Public AI protection is not configured yet. Apply supabase/ai-rate-limits.sql and set SUPABASE_SERVICE_ROLE_KEY before enabling chat.', 503);
+  }
   const messages = sanitizeMessages(rawMessages);
   if (!messages) return jsonError('Send at least one non-empty user message.', 400);
 
