@@ -1,10 +1,10 @@
 'use client';
 
-import { FileIcon, GlobeIcon, LaptopIcon, SparkIcon, WrenchIcon } from './Icons';
+import { LaptopIcon, SparkIcon, WrenchIcon } from './Icons';
 
 const CAPABILITIES = [
-  { icon: GlobeIcon, title: 'Research', detail: 'Search, compare sources and turn findings into a clear answer.' },
-  { icon: FileIcon, title: 'Understand files', detail: 'Read PDFs, documents, spreadsheets, slides and images.' },
+  { icon: SparkIcon, title: 'Research', detail: 'Search, compare sources and turn findings into a clear answer.' },
+  { icon: SparkIcon, title: 'Understand files', detail: 'Read PDFs, documents, spreadsheets, slides and images.' },
   { icon: LaptopIcon, title: 'Use your devices', detail: 'Run browser actions or control a paired desktop companion.' },
   { icon: SparkIcon, title: 'Create deliverables', detail: 'Generate polished PDFs, reports and Excel workbooks.' },
 ];
