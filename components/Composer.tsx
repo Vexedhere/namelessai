@@ -47,7 +47,7 @@ export function Composer({
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-5 pt-2">
-      <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.txt,.md,.csv,.json,.xml,.html,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.go,.rs,.sql,.yaml,.yml,.toml,.log" className="hidden" aria-label="Attach files" onChange={(e) => setFiles((old) => [...old, ...Array.from(e.target.files ?? [])].slice(0, 5))} />
+      <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.xlsx,.xls,.pptx,.zip,.txt,.md,.csv,.json,.xml,.html,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.go,.rs,.sql,.yaml,.yml,.toml,.log,.sh,.env,.ini,.conf,.graphql,.gql,.vue,.svelte" className="hidden" aria-label="Attach files" onChange={(e) => setFiles((old) => [...old, ...Array.from(e.target.files ?? [])].slice(0, 5))} />
       {files.length > 0 && <div className="mb-2 flex flex-wrap gap-2">{files.map((file, i) => <span key={`${file.name}-${i}`} className="inline-flex max-w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-zinc-300"><span className="max-w-[220px] truncate">{file.name}</span><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setFiles((old) => old.filter((_, n) => n !== i))} className="text-zinc-500 hover:text-white">×</button></span>)}</div>}
       <div className="flex items-end gap-2 rounded-3xl border border-white/10 bg-[#0d1219]/80 p-2 pl-5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] backdrop-blur-xl transition focus-within:border-cyan-400/40 focus-within:shadow-[0_0_0_1px_rgba(34,211,238,0.25),0_10px_40px_-10px_rgba(34,211,238,0.2)]">
         <textarea
@@ -66,7 +66,7 @@ export function Composer({
           aria-label="Message"
           className="scroll-thin max-h-[200px] min-h-[44px] flex-1 resize-none bg-transparent py-3 text-[15px] leading-6 text-white placeholder-zinc-500 outline-none"
         />
-        <button type="button" onClick={() => fileRef.current?.click()} disabled={loading || files.length >= 5} aria-label="Attach files" title="Attach up to 5 files (PDF, DOCX, text, code)" className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m21.4 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.83l8.49-8.48"/></svg></button>
+        <button type="button" onClick={() => fileRef.current?.click()} disabled={loading || files.length >= 5} aria-label="Attach files" title="Attach up to 5 files (PDF, Word, Excel, PowerPoint, ZIP, text and code)" className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m21.4 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.83l8.49-8.48"/></svg></button>
         {loading ? (
           <button
             onClick={onStop}
