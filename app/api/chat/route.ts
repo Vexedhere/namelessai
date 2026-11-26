@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { DEFAULT_MODEL_ID, MODEL_IDS } from '@/lib/models';
 import { TOOL_DEFS, agentSystemPrompt } from '@/lib/toolDefs';
 import { ndjson, sanitizeMessages, sseToEventStream } from '@/lib/chatProtocol';
-import { getServerUser, getUserTier } from '@/lib/serverAuth';
+import { bearerToken, getServerUser, getUserTier } from '@/lib/serverAuth';
 import { teamPrompt } from '@/lib/team';
 import { PERSONAS, PERSONA_IDS } from '@/lib/personas';
 import { APP_CODENAME, APP_VERSION_LABEL } from '@/lib/version';
@@ -100,10 +101,48 @@ export async function POST(req: NextRequest) {
     voiceLang: rawVoiceLang,
     persona: rawPersona,
     clientTime: rawTime,
+    visitorSessionId: rawVisitorSessionId,
   } = (body ?? {}) as Record<string, unknown>;
   const modelId = typeof rawModel === 'string' && MODEL_IDS.has(rawModel) ? rawModel : DEFAULT_MODEL_ID;
   const messages = sanitizeMessages(rawMessages);
   if (!messages) return jsonError('Send at least one non-empty user message.', 400);
+
+  // Server-side moderation gate: browser session kicks, account bans and mutes
+  // are checked before any model/provider request can run.
+  const visitorSessionId = typeof rawVisitorSessionId === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawVisitorSessionId)
+      ? rawVisitorSessionId : null;
+  if (!visitorSessionId) return jsonError('A valid browser session is required. Refresh the page and try again.', 400);
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://nzaelikbjumaidaombmp.supabase.co';
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!anonKey) return jsonError('Moderation service is not configured.', 503);
+  const accessToken = bearerToken(req);
+  const moderationClient = createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {} },
+  });
+
+  if (authUser) {
+    const [{ data: profile, error: profileError }, { data: moderation, error: moderationError }] = await Promise.all([
+      moderationClient.from('profiles').select('banned').eq('id', authUser.id).maybeSingle(),
+      moderationClient.from('nl_user_moderation').select('muted_until').eq('user_id', authUser.id).maybeSingle(),
+    ]);
+    if (profileError || moderationError) return jsonError('Could not verify account moderation status.', 503);
+    if (profile?.banned) return jsonError('This Nameless Labs account is banned.', 403);
+    if (moderation?.muted_until && new Date(moderation.muted_until).getTime() > Date.now()) {
+      return jsonError(`This account is muted until ${new Date(moderation.muted_until).toLocaleString()}.`, 403);
+    }
+  }
+
+  const { data: visitorCheck, error: visitorError } = await moderationClient.rpc('nl_visitor_heartbeat', {
+    p_session_id: visitorSessionId,
+    p_name: authUser?.name || 'Guest',
+    p_user_agent: req.headers.get('user-agent') || '',
+  });
+  if (visitorError) return jsonError('Could not verify this browser session with moderation.', 503);
+  if (visitorCheck?.allowed === false) return jsonError('This browser session has been kicked by Nameless Labs moderation.', 403);
+
   const requiredTier: 'FREE' | 'PLUS' | 'PRO' = modelId === 'quasar-apex' ? 'PRO' : modelId === 'aether-pro' ? 'PLUS' : 'FREE';
   if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);
   if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
