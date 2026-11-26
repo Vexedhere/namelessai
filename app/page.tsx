@@ -89,6 +89,8 @@ export default function ChatPage() {
   const changePersona = (id: string) => setPersona(id); // saved to the account by the settings effect below
   const [agent, setAgent] = useState(true);
   const [godmode, setGodmode] = useState(false);
+  const godmodeRef = useRef(false);
+  godmodeRef.current = godmode;
   const [voiceLang, setVoiceLang] = useState('en-IN');
   const [pendingEmail, setPendingEmail] = useState<PendingEmail | null>(null);
   const agentRef = useRef(true);
@@ -509,7 +511,8 @@ export default function ChatPage() {
         const session = await getSupabase()?.auth.getSession();
         const token = session?.data.session?.access_token;
 
-        for (let step = 0; step < MAX_STEPS; step++) {
+        const stepBudget = godmodeRef.current ? 20 : MAX_STEPS;
+        for (let step = 0; step < stepBudget; step++) {
           const assistant: Message = { id: uid(), role: 'assistant', content: '', model: modelId };
           cur = assistant;
           curText = '';
@@ -531,6 +534,7 @@ export default function ChatPage() {
             aiName: aiNameRef.current ?? undefined,
             persona: personaRef.current,
             tools: useTools,
+            godmode: godmodeRef.current,
             voice: !!speaker,
             voiceLang,
             token,
@@ -887,6 +891,12 @@ export default function ChatPage() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onNew={newChat}
+        onAgentMode={() => {
+          const selected = getModel(model);
+          if (!selected.tools) setModel(DEFAULT_MODEL_ID);
+          setAgent(true);
+          setGodmode(true);
+        }}
         onSelect={selectChat}
         onDelete={deleteChat}
         profile={profile}
