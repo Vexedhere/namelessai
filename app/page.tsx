@@ -676,6 +676,87 @@ export default function ChatPage() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }, [active]);
 
+  const exportChatPdf = useCallback(async () => {
+    if (!active) return;
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const left = 18;
+      const right = 18;
+      const width = pageWidth - left - right;
+      let y = 20;
+      const title = active.title.replace(/[\\\\/:*?"<>|]+/g, '').slice(0, 90) || 'NamelessAI conversation';
+      const ensure = (height: number) => {
+        if (y + height > pageHeight - 20) {
+          doc.addPage();
+          y = 20;
+        }
+      };
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(19);
+      doc.setTextColor(20, 26, 38);
+      const titleLines = doc.splitTextToSize(title, width);
+      doc.text(titleLines, left, y);
+      y += titleLines.length * 8 + 2;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(110, 118, 130);
+      doc.text(`NamelessAI · ${new Date().toLocaleString()}`, left, y);
+      y += 11;
+
+      for (const message of active.messages) {
+        const label = message.role === 'user' ? 'YOU' : (message.model ? getModel(message.model).name.toUpperCase() : 'NAMELESSAI');
+        const raw = [message.content, ...(message.toolCalls ?? []).map((call) => `[${call.name}] ${call.result ?? call.status}`)].filter(Boolean).join('\n\n');
+        const plain = raw
+          .replace(/```[\\s\\S]*?```/g, '[Code block]')
+          .replace(/!\\[([^\\]]*)\\]\\([^)]*\\)/g, '$1')
+          .replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '$1 ($2)')
+          .replace(/^#{1,6}\\s+/gm, '')
+          .replace(/[*_~`]/g, '')
+          .trim();
+        if (!plain) continue;
+        const lines = doc.splitTextToSize(plain, width);
+        const blocks = lines.length;
+        ensure(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(message.role === 'user' ? 14 : 8, message.role === 'user' ? 145 : 120, message.role === 'user' ? 170 : 150);
+        doc.text(label, left, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(42, 48, 58);
+        for (let offset = 0; offset < blocks; offset += 34) {
+          const chunk = lines.slice(offset, offset + 34);
+          ensure(chunk.length * 4.7 + 3);
+          doc.text(chunk, left, y);
+          y += chunk.length * 4.7;
+        }
+        y += 7;
+      }
+
+      const pages = doc.getNumberOfPages();
+      for (let page = 1; page <= pages; page++) {
+        doc.setPage(page);
+        doc.setDrawColor(225, 229, 235);
+        doc.line(left, pageHeight - 13, pageWidth - right, pageHeight - 13);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(130, 136, 146);
+        doc.text('NamelessAI conversation export', left, pageHeight - 8);
+        doc.text(`Page ${page} of ${pages}`, pageWidth - right, pageHeight - 8, { align: 'right' });
+      }
+      doc.save(`${title.slice(0, 65) || 'nameless-chat'}.pdf`);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      window.alert('Could not export this conversation as a PDF. Please try again.');
+    }
+  }, [active]);
+
+
   // ---- tools that drive this app (see lib/appBus.ts) ----------------------------------
   noticeRef.current = (msg) => {
     if (voiceRef.current.isActive()) voiceRef.current.speaker().say(msg);
