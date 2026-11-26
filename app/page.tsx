@@ -904,6 +904,7 @@ export default function ChatPage() {
         onToggleGodmode={() => setGodmode((value) => { const next = !value; if (next) setAgent(true); return next; })}
         godmode={godmode}
         onExport={exportChat}
+        onExportPdf={exportChatPdf}
         hasChat={!!active?.messages.length}
         toolsAvailable={current.tools}
       />
