@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlarmRinger, AlarmsButton } from '@/components/AlarmRinger';
 import { AuthModal } from '@/components/AuthModal';
 import { Composer } from '@/components/Composer';
+import { WorkspaceLaunchpad } from '@/components/WorkspaceLaunchpad';
 import { EmailConfirm, type PendingEmail } from '@/components/EmailConfirm';
 import { ActionConfirm, type PendingConfirm } from '@/components/ActionConfirm';
 import { DevicesPanel } from '@/components/DevicesPanel';
@@ -1010,18 +1011,7 @@ export default function ChatPage() {
                 </button>
               </p>
 
-              <div className="mt-9 grid w-full gap-2.5 sm:grid-cols-2">
-                {(agent && current.tools ? [...SUGGESTIONS.slice(0, 2), ...ACTION_SUGGESTIONS.slice(0, 6)] : SUGGESTIONS).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left text-sm text-zinc-300 transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.06] hover:text-white"
-                  >
-                    <SparkIcon width={16} height={16} className="mt-0.5 shrink-0 text-cyan-300/70 transition group-hover:text-cyan-300" />
-                    {s}
-                  </button>
-                ))}
-              </div>
+              <WorkspaceLaunchpad onLaunch={send} onVoice={voice.supported ? startVoice : undefined} />
             </div>
           ) : (
             <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-8">
