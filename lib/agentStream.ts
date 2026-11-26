@@ -47,6 +47,7 @@ export async function streamChat(p: {
   persona?: string;
   tools: boolean;
   voice: boolean;
+  voiceLang?: string;
   token?: string;
   signal: AbortSignal;
   onText: (accumulated: string) => void;
@@ -61,6 +62,7 @@ export async function streamChat(p: {
       persona: p.persona,
       tools: p.tools,
       voice: p.voice,
+      voiceLang: p.voiceLang,
       clientTime: { iso: localTimeString(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone },
       messages: p.messages,
     }),
