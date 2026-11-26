@@ -1048,6 +1048,7 @@ export default function ChatPage() {
         )}
         <Composer
           loading={loading || uploading}
+          uploading={uploading}
           placeholder={`Message ${aiName ?? current.name}…`}
           onSend={send}
           onStop={stop}
