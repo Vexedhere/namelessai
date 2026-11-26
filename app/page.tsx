@@ -215,6 +215,11 @@ export default function ChatPage() {
 
   const active = useMemo(() => chats.find((c) => c.id === activeId) ?? null, [chats, activeId]);
   const messages = active?.messages ?? [];
+  const longVoiceTranscript = voice.active && messages.length > 12;
+
+  useEffect(() => {
+    if (longVoiceTranscript) setSidebarOpen(true);
+  }, [longVoiceTranscript, messages.length]);
 
   // ---- auth + persistence ----------------------------------------------
   // Guests: NOTHING is saved. Chats, tool data and settings live in memory and vanish on refresh/close.
@@ -788,6 +793,7 @@ export default function ChatPage() {
 
       <Sidebar
         chats={chats}
+        voiceTranscript={longVoiceTranscript ? messages : []}
         activeId={activeId}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -914,7 +920,7 @@ export default function ChatPage() {
             </div>
           ) : (
             <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-8">
-              {messages.map((m, i) => (
+              {longVoiceTranscript ? <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-sm text-zinc-400">This voice conversation is lengthy. Its full transcript is available in the sidebar.</p> : messages.map((m, i) => (
                 <MessageView
                   key={m.id}
                   message={m}
