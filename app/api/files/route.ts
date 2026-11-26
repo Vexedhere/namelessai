@@ -1,14 +1,20 @@
 import { NextRequest } from 'next/server';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
+import JSZip from 'jszip';
+import * as XLSX from 'xlsx';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
-const MAX_TEXT_CHARS = 80_000;
-const ALLOWED = new Set(['pdf','docx','txt','md','csv','json','xml','html','css','js','jsx','ts','tsx','py','java','c','cpp','go','rs','sql','yaml','yml','toml','log']);
+const MAX_TEXT_CHARS = 100_000;
+const MAX_ZIP_ENTRIES = 40;
+const MAX_ZIP_ENTRY_CHARS = 30_000;
+const SKIP_ZIP_PATH = /(^|\/)(node_modules|\.git|dist|build|vendor|\.next)(\/|$)/i;
+const TEXT_EXTENSIONS = new Set(['txt','md','csv','json','xml','html','css','js','jsx','ts','tsx','py','java','c','cpp','go','rs','sql','yaml','yml','toml','log','sh','env','ini','conf','graphql','gql','vue','svelte']);
+const ALLOWED = new Set([...TEXT_EXTENSIONS, 'pdf','docx','xlsx','xls','pptx','zip']);
 
 function extension(name: string) {
   return name.split('.').pop()?.toLowerCase() ?? '';
@@ -22,6 +28,8 @@ export async function POST(req: NextRequest) {
   if (files.length > 5) return Response.json({ error: 'Upload up to 5 files at a time.' }, { status: 400 });
 
   const documents: { name: string; type: string; text: string; size: number }[] = [];
+  const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+  if (totalBytes > 20 * 1024 * 1024) return Response.json({ error: 'The combined upload limit is 20 MB.' }, { status: 413 });
   for (const file of files) {
     const ext = extension(file.name);
     if (!ALLOWED.has(ext)) return Response.json({ error: `Unsupported file type: ${file.name}` }, { status: 415 });
@@ -35,16 +43,46 @@ export async function POST(req: NextRequest) {
       } else if (ext === 'docx') {
         const parsed = await mammoth.extractRawText({ buffer: bytes });
         text = parsed.value;
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const workbook = XLSX.read(bytes, { type: 'buffer', cellDates: true });
+        text = workbook.SheetNames.map((sheetName) => {
+          const sheet = workbook.Sheets[sheetName];
+          return `## Sheet: ${sheetName}\n${XLSX.utils.sheet_to_csv(sheet, { blankrows: false })}`;
+        }).join('\n\n');
+      } else if (ext === 'pptx') {
+        const archive = await JSZip.loadAsync(bytes);
+        const slidePaths = Object.keys(archive.files).filter((path) => /^ppt\/slides\/slide\d+\.xml$/i.test(path)).sort((a, b) => Number(a.match(/slide(\d+)/i)?.[1] ?? 0) - Number(b.match(/slide(\d+)/i)?.[1] ?? 0));
+        const slides: string[] = [];
+        for (const path of slidePaths.slice(0, 100)) {
+          const xml = await archive.files[path].async('string');
+          const words = [...xml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/g)].map((m) => m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
+          slides.push(`## ${path.split('/').pop()?.replace('.xml', '')}\n${words.join(' ')}`);
+        }
+        text = slides.join('\n\n');
+      } else if (ext === 'zip') {
+        const archive = await JSZip.loadAsync(bytes);
+        const entries = Object.values(archive.files).filter((entry) => !entry.dir && !SKIP_ZIP_PATH.test(entry.name) && TEXT_EXTENSIONS.has(extension(entry.name))).slice(0, MAX_ZIP_ENTRIES);
+        const parts: string[] = [];
+        let total = 0;
+        for (const entry of entries) {
+          const child = await entry.async('string');
+          const content = child.slice(0, Math.min(MAX_ZIP_ENTRY_CHARS, MAX_TEXT_CHARS - total));
+          if (!content.trim()) continue;
+          parts.push(`--- ${entry.name.slice(0, 240)} ---\n${content}`);
+          total += content.length;
+          if (total >= MAX_TEXT_CHARS) break;
+        }
+        text = parts.join('\n\n');
       } else {
         text = bytes.toString('utf8');
       }
       text = text.replace(/\u0000/g, '').trim();
-      if (!text) return Response.json({ error: `${file.name} contains no readable text.` }, { status: 422 });
+      if (!text) return Response.json({ error: ext === 'pdf' ? `${file.name} has no selectable text. It may be a scanned PDF; OCR is needed to read it.` : `${file.name} contains no readable text.` }, { status: 422 });
       documents.push({ name: file.name.slice(0, 180), type: ext, text: text.slice(0, MAX_TEXT_CHARS), size: file.size });
     } catch (error) {
       console.error('File extraction failed:', file.name, error);
       return Response.json({ error: `Could not extract text from ${file.name}. Check that the file is valid and not password-protected.` }, { status: 422 });
     }
   }
-  return Response.json({ documents });
+  return Response.json({ documents, summary: { files: documents.length, extractedCharacters: documents.reduce((n, file) => n + file.text.length, 0) } });
 }
