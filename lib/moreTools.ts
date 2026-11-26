@@ -527,7 +527,7 @@ async function createSpreadsheet(a: Record<string, unknown>): Promise<ToolOutcom
   workbook.Props = { Title: str(a.title, 180) || 'Nameless Labs Spreadsheet', Author: 'Nameless Labs', Subject: 'AI-generated workbook', CreatedDate: new Date() };
   const base = str(a.filename, 100).replace(/\.xlsx$/i, '').replace(/[^\w -]/g, '').trim() || 'nameless-workbook';
   XLSX.writeFile(workbook, `${base.slice(0, 80)}.xlsx`, { compression: true });
-  const rowCount = (a.sheets as unknown[]).reduce((sum, raw) => sum + (raw && typeof raw === 'object' && Array.isArray((raw as Record<string, unknown>).rows) ? ((raw as Record<string, unknown>).rows as unknown[]).length : 0), 0);
+  const rowCount = Array.isArray(a.sheets) ? (a.sheets as unknown[]).reduce<number>((sum, raw) => sum + (raw && typeof raw === 'object' && Array.isArray((raw as Record<string, unknown>).rows) ? ((raw as Record<string, unknown>).rows as unknown[]).length : 0), 0) : 0;
   return ok(`Created and downloaded "${base}.xlsx" with ${workbook.SheetNames.length} worksheet(s) and ${rowCount} data row(s). Headers, filters and automatic column widths are included.`);
 }
 
