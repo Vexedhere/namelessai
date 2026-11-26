@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
     aiName: rawAiName,
     tools: rawTools,
     voice: rawVoice,
+    voiceLang: rawVoiceLang,
     persona: rawPersona,
     clientTime: rawTime,
   } = (body ?? {}) as Record<string, unknown>;
@@ -111,6 +112,7 @@ export async function POST(req: NextRequest) {
   // web_search is only offered when a search provider key is configured
   const activeTools = TOOL_DEFS.filter((t) => t.function.name !== 'web_search' || !!process.env.TAVILY_API_KEY?.trim());
   const voice = rawVoice === true;
+  const voiceLang = typeof rawVoiceLang === 'string' && /^[a-z]{2,3}(-[A-Z]{2})?$/.test(rawVoiceLang) ? rawVoiceLang : '';
 
   // Optional personalisation: the signed-in user's display name (sanitised, length-capped).
   const userName =
@@ -121,6 +123,9 @@ export async function POST(req: NextRequest) {
   const renamed = !!aiName && aiName.toLowerCase() !== 'namelessai';
   const base = renamed ? SYSTEM_PROMPT.replace('You are NamelessAI,', `You are ${aiName},`) : SYSTEM_PROMPT;
   let system = userName ? `${base}\n\nThe user's name is ${userName}. Address them by name only when natural.` : base;
+  if (voice && voiceLang === 'te-IN') {
+    system += `\n\nTELUGU VOICE MODE: The user selected Telugu. Speak and write every answer in natural, conversational Telugu using Telugu script (తెలుగు లిపి), not English transliteration. Use clear everyday Telangana/Indian Telugu, short spoken sentences, familiar vocabulary, and explain technical English terms briefly in Telugu. Do not merely pronounce English text with a Telugu voice. Keep product names, code, URLs, and commands unchanged. If the user speaks Telugu-English mix, understand it naturally and reply in Telugu unless they explicitly ask for English. For numbers and dates, use forms that are easy to hear. Never claim a Telugu voice is high-quality unless an actual Telugu voice is available.`;
+  }
   if (renamed) {
     system += `\n\nYOUR NAME: the user named you "${aiName}". Your name is ${aiName}. Use it when you introduce yourself or are asked who or what you are, and answer naturally when called by it. You run on NamelessAI technology from Mythical Studios; mention that only if asked what powers you.`;
   }
