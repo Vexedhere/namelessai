@@ -17,6 +17,7 @@ export function Sidebar({
   onClose,
   onNew,
   onAgentMode,
+  agentMode,
   onSelect,
   onDelete,
   profile,
@@ -32,6 +33,7 @@ export function Sidebar({
   onClose: () => void;
   onNew: () => void;
   onAgentMode: () => void;
+  agentMode: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   profile: Profile | null;
@@ -92,15 +94,16 @@ export function Sidebar({
               onAgentMode();
               onClose();
             }}
-            className="group flex w-full items-center gap-3 rounded-xl border border-violet-300/25 bg-gradient-to-r from-violet-500/[0.14] to-cyan-400/[0.08] px-3.5 py-3 text-left transition hover:border-violet-300/45 hover:from-violet-500/20 hover:to-cyan-400/[0.13]"
+            className={`group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${agentMode ? "border-violet-300/50 bg-violet-500/[0.18] shadow-[0_0_22px_-12px_rgba(167,139,250,0.8)]" : "border-violet-300/25 bg-gradient-to-r from-violet-500/[0.14] to-cyan-400/[0.08] hover:border-violet-300/45 hover:from-violet-500/20 hover:to-cyan-400/[0.13]"}`}
             aria-label="Open Agent Mode"
+            aria-pressed={agentMode}
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-violet-300/25 bg-violet-400/10 text-lg text-violet-200">✧</span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold text-violet-100">Agent Mode</span>
               <span className="mt-0.5 block text-[11px] leading-snug text-zinc-400">Plan · use tools · verify results</span>
             </span>
-            <span className="rounded-md border border-violet-300/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-violet-200/80">Beta</span>
+            <span className={`rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${agentMode ? "border-violet-300/35 text-violet-100" : "border-violet-300/20 text-violet-200/80"}`}>{agentMode ? "ON" : "BETA"}</span>
           </button>
         </div>
 
