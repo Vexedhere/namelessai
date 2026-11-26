@@ -38,7 +38,7 @@ import { defaultVoiceLang, findVoiceLang, parseYesNo } from '@/lib/voice';
 
 const AI_NAME_KEY = 'nameless-labs-ai:ai-name'; // sessionStorage only (guests): gone when the tab closes
 const MAX_CHATS = 50;
-const MAX_STEPS = 10; // Godmode gets a larger, bounded tool-execution budget
+const MAX_STEPS = 5; // Bound agent tool rounds to control cost and avoid runaway loops
 
 const SUGGESTIONS = [
   'Build a responsive pricing section in Next.js + Tailwind',
