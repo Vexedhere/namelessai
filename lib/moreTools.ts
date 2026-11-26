@@ -521,7 +521,6 @@ async function createSpreadsheet(a: Record<string, unknown>): Promise<ToolOutcom
       return { wch: Math.min(48, Math.max(12, longest + 2)) };
     });
     ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } }) };
-    ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
     XLSX.utils.book_append_sheet(workbook, ws, name);
   }
   if (!workbook.SheetNames.length) return bad('No valid worksheets were supplied. Each sheet needs at least one header.');
