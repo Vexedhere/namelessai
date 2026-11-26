@@ -49,6 +49,7 @@ export async function streamChat(p: {
   voice: boolean;
   voiceLang?: string;
   token?: string;
+  visitorSessionId?: string;
   signal: AbortSignal;
   onText: (accumulated: string) => void;
 }): Promise<{ text: string; calls: ToolCallRequest[]; error?: string }> {
@@ -63,6 +64,7 @@ export async function streamChat(p: {
       tools: p.tools,
       voice: p.voice,
       voiceLang: p.voiceLang,
+      visitorSessionId: p.visitorSessionId,
       clientTime: { iso: localTimeString(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone },
       messages: p.messages,
     }),
