@@ -17,7 +17,6 @@ export function Composer({
   placeholder: string;
   onSend: (text: string, files?: File[]) => void;
   onStop: () => void;
-  onFiles?: boolean;
   /** start hands-free voice mode (hidden when omitted) */
   onVoice?: () => void;
   voiceActive?: boolean;
