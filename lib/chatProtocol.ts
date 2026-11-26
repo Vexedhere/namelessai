@@ -4,10 +4,11 @@
 import { TOOL_NAMES } from './toolDefs';
 import type { ApiMessage, StreamEvent } from './types';
 
-export const MAX_MESSAGES = 60; // tool calls + results count as messages
-export const MAX_CHARS_PER_MESSAGE = 64_000;
-export const MAX_TOOL_ARG_CHARS = 8_000;
-export const MAX_TOOL_RESULT_CHARS = 8_000;
+export const MAX_MESSAGES = 30; // tool calls + results count as messages
+export const MAX_CHARS_PER_MESSAGE = 12_000;
+export const MAX_TOOL_ARG_CHARS = 3_000;
+export const MAX_TOOL_RESULT_CHARS = 2_500;
+export const MAX_TOTAL_CONTEXT_CHARS = 32_000; // hard cap to prevent old chats/files exhausting paid tokens.
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -48,7 +49,26 @@ export function sanitizeMessages(input: unknown): ApiMessage[] | null {
     }
   }
 
-  const trimmed = out.slice(-MAX_MESSAGES);
+  // Keep the newest context under a hard character budget. This bounds prompt cost even
+  // when a user has a very long chat or uploads large documents repeatedly.
+  const recent = out.slice(-MAX_MESSAGES);
+  const trimmed: ApiMessage[] = [];
+  let budget = MAX_TOTAL_CONTEXT_CHARS;
+  for (let i = recent.length - 1; i >= 0 && budget > 0; i--) {
+    const message = recent[i];
+    const size = message.role === 'assistant'
+      ? (typeof message.content === 'string' ? message.content.length : 0) + (message.tool_calls ?? []).reduce((n, call) => n + call.function.arguments.length + call.function.name.length, 0)
+      : message.content.length;
+    if (size > budget) {
+      if (message.role === 'user') trimmed.push({ ...message, content: message.content.slice(-budget) });
+      else if (message.role === 'assistant') trimmed.push({ ...message, content: typeof message.content === 'string' ? message.content.slice(-budget) : message.content, tool_calls: message.tool_calls?.map((call) => ({ ...call, function: { ...call.function, arguments: call.function.arguments.slice(0, Math.max(0, Math.min(1000, budget))) } })) });
+      budget = 0;
+    } else {
+      trimmed.push(message);
+      budget -= size;
+    }
+  }
+  trimmed.reverse();
   // Most providers require the conversation to start with a user turn.
   while (trimmed.length && trimmed[0].role !== 'user') trimmed.shift();
 
