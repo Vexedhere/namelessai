@@ -43,6 +43,19 @@ const NAME_IDEAS = ['Nova', 'Jarvis', 'Friday', 'Echo', 'Atlas', 'Luna', 'Orion'
 
 const QUICK = ['What can you do?', 'Set a 5 minute timer', 'What time is it in Tokyo?', 'Tell me a quick joke', 'Which version are you?'];
 
+const VOICE_PROFILES = [
+  { id: 'nova', name: 'Nova · Bright', pitch: 1.18, rate: 1.04, match: /female|zira|samantha|susan|aria|jenny/i },
+  { id: 'atlas', name: 'Atlas · Deep', pitch: 0.78, rate: 0.94, match: /male|david|daniel|mark|guy|alex/i },
+  { id: 'ember', name: 'Ember · Warm', pitch: 0.94, rate: 0.92, match: /natural|premium|neural|enhanced/i },
+  { id: 'sage', name: 'Sage · Calm', pitch: 0.88, rate: 0.86, match: /google.*(uk|us)|serena|oliver/i },
+  { id: 'echo', name: 'Echo · Clear', pitch: 1.02, rate: 1.12, match: /google|online|natural/i },
+  { id: 'luna', name: 'Luna · Soft', pitch: 1.28, rate: 0.96, match: /female|samantha|victoria|karen/i },
+  { id: 'orion', name: 'Orion · Confident', pitch: 0.92, rate: 1.08, match: /male|daniel|aaron|tom/i },
+  { id: 'mira', name: 'Mira · Friendly', pitch: 1.12, rate: 1.12, match: /female|zira|aria|jenny/i },
+  { id: 'sol', name: 'Sol · Smooth', pitch: 1.04, rate: 0.98, match: /natural|neural|premium|google/i },
+  { id: 'onyx', name: 'Onyx · Cinematic', pitch: 0.72, rate: 0.88, match: /male|david|mark|guy/i },
+] as const;
+
 const tidy = (s: string) =>
   s
     .replace(/```[\s\S]*?```/g, ' ')
@@ -126,6 +139,7 @@ function HUDInner({
   const [rate, setRate] = useState(1.05);
   const [volume, setVolume] = useState(1);
   const [voiceURI, setVoiceURI] = useState('');
+  const [voiceProfile, setVoiceProfile] = useState<(typeof VOICE_PROFILES)[number]['id']>('nova');
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [fs, setFs] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -209,6 +223,18 @@ function HUDInner({
   const applyVoice = (uri: string) => {
     setVoiceURI(uri);
     getSpeaker().voiceURI = uri;
+  };
+  const applyVoiceProfile = (id: (typeof VOICE_PROFILES)[number]['id']) => {
+    const profile = VOICE_PROFILES.find((item) => item.id === id) ?? VOICE_PROFILES[0];
+    const base = lang.split('-')[0].toLowerCase();
+    const candidates = voices.filter((voice) => voice.lang.toLowerCase().startsWith(base));
+    const matched = candidates.find((voice) => profile.match.test(voice.name));
+    setVoiceProfile(profile.id);
+    setRate(profile.rate);
+    setVoiceURI(matched?.voiceURI ?? '');
+    getSpeaker().rate = profile.rate;
+    getSpeaker().pitch = profile.pitch;
+    getSpeaker().voiceURI = matched?.voiceURI ?? '';
   };
   // unmute again if the HUD closes (the speaker outlives it)
   useEffect(
@@ -725,7 +751,15 @@ function HUDInner({
             </label>
             {canSpeak && (
               <label className="grid gap-1 text-xs text-zinc-400">
-                Voice
+                Voice personality · 10 styles
+                <select value={voiceProfile} onChange={(e) => applyVoiceProfile(e.target.value as (typeof VOICE_PROFILES)[number]['id'])} className="rounded-xl border border-white/10 bg-black/60 px-2.5 py-2 text-sm text-zinc-100 outline-none focus:border-[rgb(var(--hud))]">
+                  {VOICE_PROFILES.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+                </select>
+              </label>
+            )}
+            {canSpeak && (
+              <label className="grid gap-1 text-xs text-zinc-400">
+                Installed system voice
                 <select value={voiceURI} onChange={(e) => applyVoice(e.target.value)} className="rounded-xl border border-white/10 bg-black/60 px-2.5 py-2 text-sm text-zinc-100 outline-none focus:border-[rgb(var(--hud))]">
                   <option value="">Automatic (best match)</option>
                   {langVoices.map((v) => (
