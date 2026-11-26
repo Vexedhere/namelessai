@@ -26,6 +26,7 @@ export function CommandPalette({
   godmode,
   onExport,
   hasChat,
+  toolsAvailable,
 }: {
   open: boolean;
   onClose: () => void;
@@ -38,6 +39,7 @@ export function CommandPalette({
   godmode: boolean;
   onExport: () => void;
   hasChat: boolean;
+  toolsAvailable: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -45,10 +47,10 @@ export function CommandPalette({
 
   const commands: Command[] = [
     { id: 'new', label: 'Start a new chat', description: 'Create a fresh conversation', keywords: 'new chat reset', shortcut: 'N', run: onNewChat, icon: PlusIcon },
-    { id: 'agent', label: agent ? 'Switch to AI mode' : 'Switch to Agent mode', description: agent ? 'Turn off tool execution' : 'Enable available agent tools', keywords: 'ai agent tools mode', shortcut: 'A', run: onToggleAgent, icon: WrenchIcon },
+    { id: 'agent', label: agent ? 'Switch to AI mode' : 'Switch to Agent mode', description: agent ? 'Turn off tool execution' : 'Enable available agent tools', keywords: 'ai agent tools mode', shortcut: 'A', run: onToggleAgent, icon: WrenchIcon, disabled: !agent && !toolsAvailable },
     { id: 'devices', label: 'Open device centre', description: 'Connect or manage your desktop companion', keywords: 'device computer desktop connect', run: onDevices, icon: LaptopIcon },
     { id: 'voice', label: 'Start voice conversation', description: 'Talk to NamelessAI', keywords: 'voice microphone speak talk', run: onVoice, icon: MicIcon },
-    { id: 'godmode', label: godmode ? 'Turn off Godmode' : 'Enable Godmode', description: 'Allow longer multi-step agent workflows', keywords: 'godmode autonomous workflow', run: onToggleGodmode, icon: SparkIcon },
+    { id: 'godmode', label: godmode ? 'Turn off Godmode' : 'Enable Godmode', description: 'Allow longer multi-step agent workflows', keywords: 'godmode autonomous workflow', run: onToggleGodmode, icon: SparkIcon, disabled: !toolsAvailable },
     { id: 'export', label: 'Export current chat', description: 'Download this conversation as Markdown', keywords: 'download export save markdown', run: onExport, icon: DownloadIcon, disabled: !hasChat },
   ];
 
