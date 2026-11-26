@@ -25,6 +25,7 @@ export function CommandPalette({
   onToggleGodmode,
   godmode,
   onExport,
+  onExportPdf,
   hasChat,
   toolsAvailable,
 }: {
@@ -38,6 +39,7 @@ export function CommandPalette({
   onToggleGodmode: () => void;
   godmode: boolean;
   onExport: () => void;
+  onExportPdf: () => void;
   hasChat: boolean;
   toolsAvailable: boolean;
 }) {
@@ -52,6 +54,7 @@ export function CommandPalette({
     { id: 'voice', label: 'Start voice conversation', description: 'Talk to NamelessAI', keywords: 'voice microphone speak talk', run: onVoice, icon: MicIcon },
     { id: 'godmode', label: godmode ? 'Turn off Godmode' : 'Enable Godmode', description: 'Allow longer multi-step agent workflows', keywords: 'godmode autonomous workflow', run: onToggleGodmode, icon: SparkIcon, disabled: !toolsAvailable },
     { id: 'export', label: 'Export current chat', description: 'Download this conversation as Markdown', keywords: 'download export save markdown', run: onExport, icon: DownloadIcon, disabled: !hasChat },
+    { id: 'export-pdf', label: 'Export conversation as PDF', description: 'Create a paginated, print-ready PDF transcript', keywords: 'download pdf print document conversation', run: onExportPdf, icon: DownloadIcon, disabled: !hasChat },
   ];
 
   const filtered = useMemo(() => {
