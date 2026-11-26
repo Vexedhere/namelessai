@@ -8,7 +8,6 @@ export function Composer({
   placeholder,
   onSend,
   onStop,
-  onFiles,
   onVoice,
   voiceActive = false,
   onHandsFree,
