@@ -462,6 +462,7 @@ export default function ChatPage() {
             persona: personaRef.current,
             tools: useTools,
             voice: !!speaker,
+            voiceLang,
             token,
             signal: ctrl.signal,
             onText: (acc) => {
