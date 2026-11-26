@@ -36,7 +36,7 @@ import { defaultVoiceLang, findVoiceLang, parseYesNo } from '@/lib/voice';
 
 const AI_NAME_KEY = 'nameless-labs-ai:ai-name'; // sessionStorage only (guests): gone when the tab closes
 const MAX_CHATS = 50;
-const MAX_STEPS = 6; // model ↔ tool round trips per user message
+const MAX_STEPS = 10; // Godmode gets a larger, bounded tool-execution budget
 
 const SUGGESTIONS = [
   'Build a responsive pricing section in Next.js + Tailwind',
@@ -86,6 +86,7 @@ export default function ChatPage() {
   personaRef.current = persona;
   const changePersona = (id: string) => setPersona(id); // saved to the account by the settings effect below
   const [agent, setAgent] = useState(true);
+  const [godmode, setGodmode] = useState(false);
   const [voiceLang, setVoiceLang] = useState('en-IN');
   const [pendingEmail, setPendingEmail] = useState<PendingEmail | null>(null);
   const agentRef = useRef(true);
@@ -537,6 +538,9 @@ export default function ChatPage() {
   const send = useCallback(
     async (text: string, files: File[] = []) => {
       if (loading || uploading) return;
+      const requestText = godmode
+        ? `GODMODE — EXECUTE THIS PROJECT TASK\n\nAct as a coordinated senior team: researcher, architect, builder, analyst and QA reviewer. Turn the request into a concrete plan, then execute every step you can with the available tools. Use tools rather than merely describing actions. Verify tool results before claiming completion. If an action needs permission or an unavailable integration, clearly identify the blocker and provide the exact next step. Do not fabricate deployments, tests, files, research or outcomes. Prefer useful deliverables and concise progress updates.\n\nUSER TASK:\n${text}`
+        : text;
       let context = '';
       if (files.length) {
         setUploading(true);
@@ -560,7 +564,7 @@ export default function ChatPage() {
         }
         setUploading(false);
       }
-      const userMsg: Message = { id: uid(), role: 'user', content: text, ...(context ? { context } : {}) };
+      const userMsg: Message = { id: uid(), role: 'user', content: requestText, ...(context ? { context } : {}) };
       let chatId = activeId;
 
       if (!chatId || !chats.some((c) => c.id === chatId)) {
@@ -579,7 +583,7 @@ export default function ChatPage() {
         void run(chatId, [...(active?.messages ?? []), userMsg], model);
       }
     },
-    [active, activeId, chats, loading, uploading, model, run],
+    [active, activeId, chats, loading, uploading, model, run, godmode],
   );
 
   // spoken input: a yes/no while an email awaits confirmation, otherwise a normal message
@@ -835,6 +839,16 @@ export default function ChatPage() {
           </span>
           <div className="ml-auto flex items-center gap-2">
             <button
+              onClick={() => { setGodmode((value) => { const next = !value; if (next) setAgent(true); return next; }); }}
+              disabled={!current.tools}
+              aria-pressed={godmode}
+              title={current.tools ? 'Godmode: plan and execute complex tasks with available tools' : 'Choose a tool-capable model to use Godmode'}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${godmode ? 'border-violet-300/50 bg-violet-400/15 text-violet-200 shadow-[0_0_18px_-7px_rgba(167,139,250,0.8)]' : 'border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white'}`}
+            >
+              <SparkIcon width={14} height={14} />
+              <span className="hidden sm:inline">Godmode</span>
+            </button>
+            <button
               onClick={toggleAgent}
               disabled={!current.tools}
               aria-pressed={agent && current.tools}
@@ -888,6 +902,13 @@ export default function ChatPage() {
           </div>
         </header>
 
+        {godmode && (
+          <div className="mx-auto mt-3 flex w-full max-w-3xl items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/[0.07] px-3 py-2 text-xs text-violet-100">
+            <SparkIcon width={14} height={14} />
+            <span className="flex-1">Godmode is on · task planning, available tools and verification enabled</span>
+            <button onClick={() => setGodmode(false)} className="text-violet-200/70 transition hover:text-white">Turn off</button>
+          </div>
+        )}
         <div ref={scrollRef} onScroll={onScroll} className="scroll-thin flex-1 overflow-y-auto">
           {messages.length === 0 ? (
             <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col items-center justify-center px-5 py-10 text-center">
