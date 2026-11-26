@@ -560,6 +560,26 @@ export const TOOL_DEFS: ToolDef[] = [
   {
     type: 'function',
     function: {
+      name: 'create_spreadsheet',
+      description: 'Create and download a real Excel .xlsx workbook. Use for budgets, trackers, schedules, inventories, comparisons and datasets. Supports multiple worksheets, column headers, rows, frozen header rows, filters and sensible automatic column widths. Do not use save_file to create an .xlsx.',
+      parameters: {
+        type: 'object',
+        properties: {
+          filename: str('Workbook filename.'),
+          sheets: { type: 'array', description: 'One or more worksheet definitions.', items: { type: 'object', properties: {
+            name: str('Worksheet tab name, max 31 characters.'),
+            headers: { type: 'array', items: { type: 'string' }, description: 'Column headers.' },
+            rows: { type: 'array', items: { type: 'array', items: { type: ['string', 'number', 'boolean', 'null'] } }, description: 'Rows matching the header order.' }
+          }, required: ['name', 'headers', 'rows'], additionalProperties: false } }
+        },
+        required: ['sheets'],
+        additionalProperties: false
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'save_file',
       description: 'Create a text file (notes, CSV, Markdown, JSON, HTML, code) and save it to the user\'s Downloads folder. Not for executables.',
       parameters: { type: 'object', properties: { filename: str('File name with extension, e.g. "plan.md".'), content: str('Full file contents.') }, required: ['filename', 'content'], additionalProperties: false },
