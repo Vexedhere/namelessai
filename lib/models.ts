@@ -1,5 +1,5 @@
-// Shared, client-safe model catalogue. Gemini model IDs live server-side
-// in app/api/chat/route.ts so they can be changed without touching the UI.
+// Shared, client-safe model catalogue. Provider model IDs and routing stay server-side
+// in app/api/chat/route.ts so provider changes never expose credentials to the browser.
 
 export type ModelDef = {
   id: string;
@@ -25,7 +25,7 @@ export const MODELS: ModelDef[] = [
     id: 'pulse-nano',
     name: 'Pulse Nano',
     badge: 'Fast',
-    tagline: 'Featherweight and instant. Best for quick questions and drafts.',
+    tagline: 'Fast default for quick questions, short answers and drafts.',
     accent: ['#34d399', '#22d3ee'],
     tools: false,
   },
