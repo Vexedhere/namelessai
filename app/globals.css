@@ -184,3 +184,40 @@ body {
 }
 .hud-caret { animation: caret 1s steps(2) infinite; }
 .hud-pop { animation: pop 0.15s ease-out both; }
+
+
+/* ── NamelessAI workspace refresh ─────────────────────────────────────── */
+.workspace-atmosphere { isolation: isolate; overflow: hidden; background: #090b0a; }
+.workspace-grid {
+  position: absolute; inset: 0; opacity: .28;
+  background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+.workspace-glow { position: absolute; width: 42rem; height: 42rem; border-radius: 999px; filter: blur(110px); pointer-events: none; }
+.workspace-glow-a { top: -32rem; left: 22%; background: rgba(163,230,53,.12); }
+.workspace-glow-b { right: -30rem; top: 30%; background: rgba(56,189,248,.075); }
+.workspace-grain {
+  position: absolute; inset: 0; opacity: .13; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+}
+.workspace-main { background: transparent; }
+.workspace-topbar { background: rgba(9,11,10,.68); }
+.workspace-composer {
+  background: linear-gradient(180deg, rgba(9,11,10,0), rgba(9,11,10,.94) 26%);
+  padding-top: 1.25rem;
+}
+.workspace-composer-box {
+  border-color: rgba(255,255,255,.12) !important;
+  background: rgba(20,23,19,.92) !important;
+  border-radius: 1.35rem !important;
+  box-shadow: 0 18px 65px -28px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.025) !important;
+}
+.workspace-composer-box:focus-within {
+  border-color: rgba(190,242,100,.38) !important;
+  box-shadow: 0 0 0 1px rgba(190,242,100,.12), 0 18px 65px -28px rgba(0,0,0,.95) !important;
+}
+@media (max-width: 640px) {
+  .workspace-grid { background-size: 42px 42px; }
+  .workspace-glow { width: 25rem; height: 25rem; filter: blur(80px); }
+}
