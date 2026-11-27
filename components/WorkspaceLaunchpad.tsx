@@ -1,6 +1,6 @@
 'use client';
 
-const launchers = [
+const launchers: { number: string; icon: string; title: string; detail: string; tag: string; prompt?: string; featured?: boolean; voice?: boolean }[] = [
   { number: '01', icon: '↗', title: 'Build an idea', detail: 'Turn a rough thought into a real product.', tag: 'CREATE', prompt: 'Act as my product engineer. Help me turn my idea into a clear implementation plan, then build it step by step. Ask only for essential missing details.', featured: true },
   { number: '02', icon: '⌕', title: 'Deep research', detail: 'Find the signal. Bring back the sources.', tag: 'DISCOVER', prompt: 'Help me research this topic carefully. Break it into sub-questions, use available search tools when possible, distinguish verified facts from assumptions, and cite sources when available.' },
   { number: '03', icon: '▤', title: 'Read a file', detail: 'Make sense of documents and data.', tag: 'ANALYSE', prompt: 'I want you to analyse an attached file. First identify its type and structure, then extract the important information, explain insights, and flag anything uncertain.' },
