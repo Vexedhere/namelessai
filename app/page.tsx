@@ -89,7 +89,7 @@ export default function ChatPage() {
   const personaRef = useRef('default');
   personaRef.current = persona;
   const changePersona = (id: string) => setPersona(id); // saved to the account by the settings effect below
-  const [agent, setAgent] = useState(true);
+  const [agent, setAgent] = useState(false);
   const [godmode, setGodmode] = useState(false);
   const godmodeRef = useRef(false);
   godmodeRef.current = godmode;
@@ -367,7 +367,6 @@ export default function ChatPage() {
           if (st.persona && PERSONA_IDS.has(st.persona)) setPersona(st.persona);
           if (st.model && MODELS.some((m) => m.id === st.model)) setModel(st.model);
           if (st.voiceLang) setVoiceLang(st.voiceLang);
-          if (typeof st.agent === 'boolean') setAgent(st.agent);
         }
         const name = st?.aiName || aiNameRef.current; // a name picked as a guest in this tab carries over
         setAiName(name);
@@ -406,7 +405,7 @@ export default function ChatPage() {
   useEffect(() => {
     const sb = getSupabase();
     if (!accountReady || !userId || !sb) return;
-    const settings = { aiName, theme: themeId, persona, model, voiceLang, agent };
+    const settings = { aiName, theme: themeId, persona, model, voiceLang };
     const json = JSON.stringify(settings);
     if (json === lastSettingsRef.current) return;
     const t = setTimeout(async () => {
@@ -418,7 +417,7 @@ export default function ChatPage() {
       }
     }, 800);
     return () => clearTimeout(t);
-  }, [accountReady, userId, aiName, themeId, persona, model, voiceLang, agent]);
+  }, [accountReady, userId, aiName, themeId, persona, model, voiceLang]);
 
   const saveAiName = useCallback((raw: string) => {
     const n = cleanAiName(raw);
