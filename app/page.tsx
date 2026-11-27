@@ -992,7 +992,7 @@ export default function ChatPage() {
                 <WorkspaceLaunchpad onLaunch={send} onVoice={voice.supported ? startVoice : undefined} />
                 <div className="home-footer"><span>BUILT FOR CURIOSITY. DESIGNED FOR MOMENTUM.</span><span>{APP_CODENAME} <i>·</i> {APP_VERSION_LABEL}</span></div>
               </div>
-            )}
+            )
           ) : (
             <div className="mx-auto w-full max-w-4xl space-y-9 px-4 py-9 sm:px-6">
               {longVoiceTranscript ? <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-sm text-zinc-400">This voice conversation is lengthy. Its full transcript is available in the sidebar.</p> : messages.map((m, i) => (
