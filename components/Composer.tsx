@@ -49,7 +49,7 @@ export function Composer({
     <div className="workspace-composer mx-auto w-full max-w-[920px] px-4 pb-5 pt-2 sm:px-6">
       <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.xlsx,.xls,.pptx,.zip,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,.txt,.md,.csv,.json,.xml,.html,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.go,.rs,.sql,.yaml,.yml,.toml,.log,.sh,.env,.ini,.conf,.graphql,.gql,.vue,.svelte" className="hidden" aria-label="Attach files" onChange={(e) => setFiles((old) => [...old, ...Array.from(e.target.files ?? [])].slice(0, 5))} />
       {files.length > 0 && <div className="mb-2 flex flex-wrap gap-2">{files.map((file, i) => <span key={`${file.name}-${i}`} className="inline-flex max-w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-zinc-300"><span className="max-w-[220px] truncate">{file.name}</span><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setFiles((old) => old.filter((_, n) => n !== i))} className="text-zinc-500 hover:text-white">×</button></span>)}</div>}
-      <div className="flex items-end gap-2 workspace-composer-box flex items-end gap-2 rounded-3xl border border-white/10 bg-[#0d1219]/80 p-2 pl-5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] backdrop-blur-xl transition">
+      <div className="workspace-composer-box flex items-end gap-2 rounded-3xl border border-white/10 bg-[#0d1219]/80 p-2 pl-5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] backdrop-blur-xl transition">
         <textarea
           ref={ref}
           rows={1}
