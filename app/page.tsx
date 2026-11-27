@@ -6,6 +6,7 @@ import { AuthModal } from '@/components/AuthModal';
 import { Composer } from '@/components/Composer';
 import { WorkspaceLaunchpad } from '@/components/WorkspaceLaunchpad';
 import { AgentLaunchpad } from '@/components/AgentLaunchpad';
+import { ToolsHub } from '@/components/ToolsHub';
 import { EmailConfirm, type PendingEmail } from '@/components/EmailConfirm';
 import { ActionConfirm, type PendingConfirm } from '@/components/ActionConfirm';
 import { DevicesPanel } from '@/components/DevicesPanel';
@@ -74,6 +75,7 @@ export default function ChatPage() {
   const [uploading, setUploading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [cloudReady, setCloudReady] = useState(false);
@@ -893,6 +895,7 @@ export default function ChatPage() {
         onClose={() => setSidebarOpen(false)}
         onNew={newChat}
         agentMode={godmode}
+        onOpenTools={() => setToolsOpen(true)}
         onAgentMode={() => {
           const selected = getModel(model);
           if (!selected.tools) setModel(DEFAULT_MODEL_ID);
@@ -908,6 +911,7 @@ export default function ChatPage() {
         onSignOut={signOut}
       />
       <DevicesPanel open={devicesOpen} onClose={() => setDevicesOpen(false)} />
+      {toolsOpen && <ToolsHub onClose={() => setToolsOpen(false)} onRun={(prompt) => { setToolsOpen(false); send(prompt); }} />}
       <AuthModal open={authOpen && !user} onClose={() => setAuthOpen(false)} />
       <NameAiModal
         open={nameOpen && authReady && !authOpen && !voice.active}
@@ -947,6 +951,7 @@ export default function ChatPage() {
                 <div className="topbar-controls-meta">Current engine · {current.name}</div>
               </div>}
             </div>
+            <button onClick={() => setToolsOpen(true)} aria-label="Explore tools" title="Explore all AI capabilities" className="topbar-explore">✳ <span>Explore</span></button>
             <button onClick={() => setDevicesOpen(true)} aria-label="Devices" title="Connected device tools" className="topbar-icon"><LaptopIcon width={16} height={16} /></button>
             <AlarmsButton />
             <ThemeButton />
