@@ -939,7 +939,7 @@ export default function ChatPage() {
               disabled={!current.tools}
               aria-pressed={godmode}
               title={current.tools ? 'Godmode: plan and execute complex tasks with available tools' : 'Choose a tool-capable model to use Godmode'}
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${godmode ? 'border-violet-300/50 bg-violet-400/15 text-violet-200 shadow-[0_0_18px_-7px_rgba(167,139,250,0.8)]' : 'border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white'}`}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${godmode ? 'border-lime-300/35 bg-lime-300/[0.08] text-lime-100 shadow-[0_0_18px_-7px_rgba(190,242,100,0.55)]' : 'border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white'}`}
             >
               <SparkIcon width={14} height={14} />
               <span className="hidden sm:inline">Godmode</span>
@@ -999,10 +999,10 @@ export default function ChatPage() {
         </header>
 
         {godmode && (
-          <div className="mx-auto mt-3 flex w-full max-w-3xl items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/[0.07] px-3 py-2 text-xs text-violet-100">
+          <div className="mx-auto mt-3 flex w-full max-w-3xl items-center gap-2 rounded-xl border border-lime-300/20 bg-lime-300/[0.045] px-3 py-2 text-xs text-lime-100">
             <SparkIcon width={14} height={14} />
             <span className="flex-1">Agent Mode active · plan, execute and verify with up to 20 tool steps</span>
-            <button onClick={() => setGodmode(false)} className="text-violet-200/70 transition hover:text-white">Exit Agent Mode</button>
+            <button onClick={() => setGodmode(false)} className="text-lime-200/70 transition hover:text-white">Exit Agent Mode</button>
           </div>
         )}
         <div ref={scrollRef} onScroll={onScroll} className="scroll-thin flex-1 overflow-y-auto">
@@ -1043,7 +1043,7 @@ export default function ChatPage() {
               </div>
             </div>
           ) : (
-            <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-8">
+            <div className="mx-auto w-full max-w-4xl space-y-9 px-4 py-9 sm:px-6">
               {longVoiceTranscript ? <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-sm text-zinc-400">This voice conversation is lengthy. Its full transcript is available in the sidebar.</p> : messages.map((m, i) => (
                 <MessageView
                   key={m.id}
