@@ -9,7 +9,7 @@ import { AgentLaunchpad } from '@/components/AgentLaunchpad';
 import { EmailConfirm, type PendingEmail } from '@/components/EmailConfirm';
 import { ActionConfirm, type PendingConfirm } from '@/components/ActionConfirm';
 import { DevicesPanel } from '@/components/DevicesPanel';
-import { DownloadIcon, LaptopIcon, MenuIcon, PlusIcon, SparkIcon, WrenchIcon } from '@/components/Icons';
+import { DownloadIcon, LaptopIcon, MenuIcon, PlusIcon, WrenchIcon } from '@/components/Icons';
 import { MessageView } from '@/components/MessageView';
 import { ModelOrb, ModelPicker } from '@/components/ModelPicker';
 import { Sidebar } from '@/components/Sidebar';
