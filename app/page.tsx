@@ -405,7 +405,7 @@ export default function ChatPage() {
   useEffect(() => {
     const sb = getSupabase();
     if (!accountReady || !userId || !sb) return;
-    const settings = { aiName, theme: themeId, persona, model, voiceLang };
+    const settings = { aiName, theme: themeId, persona, model, voiceLang, agent };
     const json = JSON.stringify(settings);
     if (json === lastSettingsRef.current) return;
     const t = setTimeout(async () => {
@@ -417,7 +417,7 @@ export default function ChatPage() {
       }
     }, 800);
     return () => clearTimeout(t);
-  }, [accountReady, userId, aiName, themeId, persona, model, voiceLang]);
+  }, [accountReady, userId, aiName, themeId, persona, model, voiceLang, agent]);
 
   const saveAiName = useCallback((raw: string) => {
     const n = cleanAiName(raw);
