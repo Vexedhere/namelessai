@@ -54,7 +54,7 @@ export function Sidebar({
     <>
       {open && <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden" onClick={onClose} />}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[18.5rem] flex-col border-r border-white/[0.08] bg-canvas/90 backdrop-blur-2xl transition-transform duration-300 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[18.5rem] flex-col border-r border-white/[0.08] bg-[#0a0d0b]/95 backdrop-blur-2xl transition-transform duration-300 md:static md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -94,13 +94,13 @@ export function Sidebar({
               onAgentMode();
               onClose();
             }}
-            className={`group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${agentMode ? "border-violet-300/50 bg-violet-500/[0.18] shadow-[0_0_22px_-12px_rgba(167,139,250,0.8)]" : "border-violet-300/25 bg-gradient-to-r from-violet-500/[0.14] to-cyan-400/[0.08] hover:border-violet-300/45 hover:from-violet-500/20 hover:to-cyan-400/[0.13]"}`}
+            className={`group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${agentMode ? "border-lime-300/35 bg-lime-300/[0.09] shadow-[0_0_22px_-12px_rgba(190,242,100,0.55)]" : "border-white/10 bg-white/[0.025] hover:border-lime-300/25 hover:bg-lime-300/[0.045]"}`}
             aria-label="Open Agent Mode"
             aria-pressed={agentMode}
           >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-violet-300/25 bg-violet-400/10 text-lg text-violet-200">✧</span>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-lime-300/20 bg-lime-300/[0.07] text-lg text-lime-200">✧</span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold text-violet-100">Agent Mode</span>
+              <span className="block text-sm font-semibold text-lime-100">Agent Mode</span>
               <span className="mt-0.5 block text-[11px] leading-snug text-zinc-400">Plan · use tools · verify results</span>
             </span>
             <span className={`rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${agentMode ? "border-violet-300/35 text-violet-100" : "border-violet-300/20 text-violet-200/80"}`}>{agentMode ? "ON" : "BETA"}</span>
