@@ -17,6 +17,7 @@ export function Sidebar({
   onClose,
   onNew,
   onAgentMode,
+  onOpenTools,
   agentMode,
   onSelect,
   onDelete,
@@ -33,6 +34,7 @@ export function Sidebar({
   onClose: () => void;
   onNew: () => void;
   onAgentMode: () => void;
+  onOpenTools: () => void;
   agentMode: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
@@ -107,6 +109,7 @@ export function Sidebar({
           </button>
         </div>
 
+        <div className="px-4 pb-2"><button type="button" onClick={() => { onOpenTools(); onClose(); }} className="flex w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3.5 py-3 text-left text-sm text-zinc-200 transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.05]"><span className="grid h-9 w-9 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-300/[0.07] text-lg text-cyan-200">✳</span><span className="min-w-0 flex-1"><b className="block font-semibold">Explore tools</b><small className="text-[11px] text-zinc-500">Search built-in capabilities</small></span><span className="text-xs text-zinc-500">↗</span></button></div>
         <div className="px-4 pb-2"><a href="https://tiers.namlesslabs.in.net" className="block w-full rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2.5 text-center text-sm font-semibold text-violet-200 transition hover:bg-violet-500/20">✦ Upgrade to Plus / Pro</a></div>
 
         {chats.length > 3 && (
