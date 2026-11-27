@@ -963,7 +963,7 @@ export default function ChatPage() {
         )}
         <div ref={scrollRef} onScroll={onScroll} className="scroll-thin flex-1 overflow-y-auto">
           {messages.length === 0 ? (
-            {godmode ? (
+            godmode ? (
               <AgentLaunchpad onLaunch={send} onVoice={voice.supported ? startVoice : undefined} />
             ) : (
               <div className="home-stage mx-auto flex min-h-full w-full max-w-[1440px] flex-col px-5 pb-10 pt-7 sm:px-8 lg:px-12">
