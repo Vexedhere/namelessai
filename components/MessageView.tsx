@@ -27,7 +27,7 @@ function MessageViewImpl({
   if (message.role === 'user') {
     return (
       <div className="animate-rise flex justify-end">
-        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-3xl rounded-br-lg border border-cyan-300/20 bg-gradient-to-br from-cyan-400/[0.14] to-accent/[0.12] px-5 py-3 text-[15px] leading-relaxed text-cyan-50 shadow-lg shadow-black/20">
+        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-[22px] rounded-br-md border border-lime-200/15 bg-lime-200/[0.075] px-5 py-3.5 text-[15px] leading-relaxed text-zinc-100 shadow-lg shadow-black/10">
           {message.content}
         </div>
       </div>
@@ -52,7 +52,7 @@ function MessageViewImpl({
     <div className={`animate-rise flex gap-3.5 ${continuation ? '-mt-5' : ''}`}>
       <div className="w-7 shrink-0 pt-1">{!continuation && <ModelOrb model={model} size={28} />}</div>
       <div className="min-w-0 flex-1">
-        {!continuation && <p className="mb-1 text-xs font-medium text-zinc-500">{model.name}</p>}
+        {!continuation && <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{model.name}</p>}
 
         {waiting && (
           <div className="flex items-center gap-1.5 py-3" aria-label="Thinking">
