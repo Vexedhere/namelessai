@@ -876,12 +876,12 @@ export default function ChatPage() {
   return (
     <div className="relative flex h-[100dvh] overflow-hidden bg-canvas text-zinc-100 transition-colors duration-500">
       <AlarmRinger />
-      {/* ambient background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-cyan-500/[0.13] blur-[120px]" />
-        <div className="absolute -right-40 top-1/3 h-[32rem] w-[32rem] rounded-full bg-accent/[0.14] blur-[130px]" />
-        <div className="absolute bottom-[-12rem] left-1/3 h-[26rem] w-[26rem] rounded-full bg-accent/[0.07] blur-[120px]" />
-        <div className="bg-grid absolute inset-0" />
+      {/* Quiet, high-contrast workspace atmosphere */}
+      <div aria-hidden className="workspace-atmosphere pointer-events-none absolute inset-0">
+        <div className="workspace-glow workspace-glow-a" />
+        <div className="workspace-glow workspace-glow-b" />
+        <div className="workspace-grid" />
+        <div className="workspace-grain" />
       </div>
 
       <Sidebar
@@ -916,8 +916,8 @@ export default function ChatPage() {
         onClose={aiName ? () => setNameOpen(false) : undefined}
       />
 
-      <section className="relative z-10 flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.07] bg-black/20 px-4 backdrop-blur-xl">
+      <section className="workspace-main relative z-10 flex min-w-0 flex-1 flex-col">
+        <header className="workspace-topbar flex h-[72px] shrink-0 items-center gap-3 border-b border-white/[0.07] px-5 backdrop-blur-2xl sm:px-7">
           <button
             onClick={() => setSidebarOpen(true)}
             aria-label="Open sidebar"
@@ -955,7 +955,7 @@ export default function ChatPage() {
                     : 'Actions off (click to turn on)'
                   : `${current.name} can’t use tools. Pick Lyric, Vega, Aether or NamelessAI for actions.`
               }
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
                 agent && current.tools
                   ? 'border-cyan-300/40 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/15'
                   : 'border-white/10 text-zinc-400 hover:bg-white/10'
@@ -1007,22 +1007,40 @@ export default function ChatPage() {
         )}
         <div ref={scrollRef} onScroll={onScroll} className="scroll-thin flex-1 overflow-y-auto">
           {messages.length === 0 ? (
-            <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col items-center justify-center px-5 py-10 text-center">
-              <div className="animate-float">
-                <ModelOrb model={current} size={72} />
+            <div className="mx-auto flex min-h-full w-full max-w-[1120px] flex-col justify-center px-5 pb-12 pt-10 sm:px-8 lg:px-12">
+              <div className="mb-9 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_12px_rgba(190,242,100,.8)]" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400">A clearer way to get things done</span>
+                </div>
+                <div className="hidden items-center gap-2 rounded-full border border-white/[0.09] bg-white/[0.025] px-3 py-1.5 sm:flex">
+                  <ModelOrb model={current} size={15} />
+                  <span className="text-[11px] text-zinc-300">{aiName ?? current.name}</span>
+                  <span className="text-zinc-700">/</span>
+                  <button onClick={() => setNameOpen(true)} className="text-[10px] text-zinc-500 transition hover:text-lime-200">Rename</button>
+                </div>
               </div>
-              <h2 className="mt-8 bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl">
-                {firstName ? `Hey ${firstName}, what are we building?` : 'What are we building today?'}
-              </h2>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-zinc-400">
-                You are chatting with <span className="font-medium text-zinc-200">{aiName ?? current.name}</span>
-                {aiName && aiName !== current.name ? <span className="text-zinc-500"> (on {current.name})</span> : null}. {current.tagline}{' '}
-                <button onClick={() => setNameOpen(true)} className="text-cyan-300 underline-offset-2 transition hover:underline">
-                  Rename
-                </button>
-              </p>
-
+              <div className="mb-10 max-w-4xl">
+                <h2 className="text-[clamp(3.4rem,8vw,7.3rem)] font-semibold leading-[0.88] tracking-[-0.075em] text-white">
+                  Make room
+                  <br />
+                  for <span className="font-serif font-normal italic tracking-[-0.065em] text-lime-200">what&apos;s next.</span>
+                </h2>
+                <div className="mt-7 flex max-w-2xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <p className="max-w-md text-sm leading-7 text-zinc-400 sm:text-[15px]">
+                    {firstName ? `Hey ${firstName}. ` : ''}Think bigger, get unstuck, and turn the next idea into something real. One workspace, ready when you are.
+                  </p>
+                  <div className="flex shrink-0 items-center gap-2 text-[11px] text-zinc-500">
+                    <span className="h-px w-8 bg-lime-300/50" />
+                    {current.tagline}
+                  </div>
+                </div>
+              </div>
               <WorkspaceLaunchpad onLaunch={send} onVoice={voice.supported ? startVoice : undefined} />
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-5 text-[10px] uppercase tracking-[0.16em] text-zinc-600">
+                <span>Designed to move at the speed of thought</span>
+                <span className="font-mono">{APP_CODENAME} · {APP_VERSION_LABEL}</span>
+              </div>
             </div>
           ) : (
             <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-8">
