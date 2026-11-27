@@ -1007,39 +1007,40 @@ export default function ChatPage() {
         )}
         <div ref={scrollRef} onScroll={onScroll} className="scroll-thin flex-1 overflow-y-auto">
           {messages.length === 0 ? (
-            <div className="mx-auto flex min-h-full w-full max-w-[1120px] flex-col justify-center px-5 pb-12 pt-10 sm:px-8 lg:px-12">
-              <div className="mb-9 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2.5">
-                  <span className="h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_12px_rgba(190,242,100,.8)]" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400">A clearer way to get things done</span>
-                </div>
-                <div className="hidden items-center gap-2 rounded-full border border-white/[0.09] bg-white/[0.025] px-3 py-1.5 sm:flex">
-                  <ModelOrb model={current} size={15} />
-                  <span className="text-[11px] text-zinc-300">{aiName ?? current.name}</span>
-                  <span className="text-zinc-700">/</span>
-                  <button onClick={() => setNameOpen(true)} className="text-[10px] text-zinc-500 transition hover:text-lime-200">Rename</button>
-                </div>
+            <div className="home-stage mx-auto flex min-h-full w-full max-w-[1440px] flex-col px-5 pb-10 pt-7 sm:px-8 lg:px-12">
+              <div className="home-kicker">
+                <span className="home-kicker-mark">N</span>
+                <span>Nameless Labs <i>/</i> Personal intelligence workspace</span>
+                <span className="home-kicker-version">{APP_VERSION_LABEL}</span>
               </div>
-              <div className="mb-10 max-w-4xl">
-                <h2 className="text-[clamp(3.4rem,8vw,7.3rem)] font-semibold leading-[0.88] tracking-[-0.075em] text-white">
-                  Make room
-                  <br />
-                  for <span className="font-serif font-normal italic tracking-[-0.065em] text-lime-200">what&apos;s next.</span>
-                </h2>
-                <div className="mt-7 flex max-w-2xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                  <p className="max-w-md text-sm leading-7 text-zinc-400 sm:text-[15px]">
-                    {firstName ? `Hey ${firstName}. ` : ''}Think bigger, get unstuck, and turn the next idea into something real. One workspace, ready when you are.
+              <div className="home-hero">
+                <div className="home-hero-copy">
+                  <p className="home-overline"><span /> YOUR NEXT MOVE STARTS HERE</p>
+                  <h2>Make it<br /><em>happen.</em></h2>
+                  <p className="home-intro">
+                    {firstName ? `Good to have you here, ${firstName}. ` : ''}From a half-formed idea to a finished piece of work. Bring the messy first thought — we’ll shape it together.
                   </p>
-                  <div className="flex shrink-0 items-center gap-2 text-[11px] text-zinc-500">
-                    <span className="h-px w-8 bg-lime-300/50" />
-                    {current.tagline}
+                  <div className="home-model-line">
+                    <span className="home-model-orb"><ModelOrb model={current} size={16} /></span>
+                    <span>POWERED BY <b>{aiName ?? current.name}</b></span>
+                    <button onClick={() => setNameOpen(true)}>PERSONALISE ↗</button>
                   </div>
+                </div>
+                <div className="home-hero-art" aria-hidden="true">
+                  <div className="home-art-index">NL—001</div>
+                  <div className="home-art-ring home-art-ring-one" />
+                  <div className="home-art-ring home-art-ring-two" />
+                  <div className="home-art-core"><span>n</span></div>
+                  <div className="home-art-cross home-art-cross-a" />
+                  <div className="home-art-cross home-art-cross-b" />
+                  <div className="home-art-caption">IDEAS IN<br />MOTION</div>
+                  <div className="home-art-foot">THINK / MAKE / REPEAT</div>
                 </div>
               </div>
               <WorkspaceLaunchpad onLaunch={send} onVoice={voice.supported ? startVoice : undefined} />
-              <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-5 text-[10px] uppercase tracking-[0.16em] text-zinc-600">
-                <span>Designed to move at the speed of thought</span>
-                <span className="font-mono">{APP_CODENAME} · {APP_VERSION_LABEL}</span>
+              <div className="home-footer">
+                <span>BUILT FOR CURIOSITY. DESIGNED FOR MOMENTUM.</span>
+                <span>{APP_CODENAME} <i>·</i> {APP_VERSION_LABEL}</span>
               </div>
             </div>
           ) : (
