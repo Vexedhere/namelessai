@@ -4,10 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlarmRinger, AlarmsButton } from '@/components/AlarmRinger';
 import { AuthModal } from '@/components/AuthModal';
 import { Composer } from '@/components/Composer';
+import { WorkspaceLaunchpad } from '@/components/WorkspaceLaunchpad';
+import { AgentLaunchpad } from '@/components/AgentLaunchpad';
 import { EmailConfirm, type PendingEmail } from '@/components/EmailConfirm';
 import { ActionConfirm, type PendingConfirm } from '@/components/ActionConfirm';
 import { DevicesPanel } from '@/components/DevicesPanel';
-import { DownloadIcon, LaptopIcon, MenuIcon, PlusIcon, SparkIcon, WrenchIcon } from '@/components/Icons';
+import { DownloadIcon, LaptopIcon, MenuIcon, PlusIcon, WrenchIcon } from '@/components/Icons';
 import { MessageView } from '@/components/MessageView';
 import { ModelOrb, ModelPicker } from '@/components/ModelPicker';
 import { Sidebar } from '@/components/Sidebar';
@@ -71,6 +73,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [cloudReady, setCloudReady] = useState(false);
@@ -86,8 +89,10 @@ export default function ChatPage() {
   const personaRef = useRef('default');
   personaRef.current = persona;
   const changePersona = (id: string) => setPersona(id); // saved to the account by the settings effect below
-  const [agent, setAgent] = useState(true);
+  const [agent, setAgent] = useState(false);
   const [godmode, setGodmode] = useState(false);
+  const godmodeRef = useRef(false);
+  godmodeRef.current = godmode;
   const [voiceLang, setVoiceLang] = useState('en-IN');
   const [pendingEmail, setPendingEmail] = useState<PendingEmail | null>(null);
   const agentRef = useRef(true);
@@ -362,7 +367,6 @@ export default function ChatPage() {
           if (st.persona && PERSONA_IDS.has(st.persona)) setPersona(st.persona);
           if (st.model && MODELS.some((m) => m.id === st.model)) setModel(st.model);
           if (st.voiceLang) setVoiceLang(st.voiceLang);
-          if (typeof st.agent === 'boolean') setAgent(st.agent);
         }
         const name = st?.aiName || aiNameRef.current; // a name picked as a guest in this tab carries over
         setAiName(name);
@@ -508,7 +512,8 @@ export default function ChatPage() {
         const session = await getSupabase()?.auth.getSession();
         const token = session?.data.session?.access_token;
 
-        for (let step = 0; step < MAX_STEPS; step++) {
+        const stepBudget = godmodeRef.current ? 20 : MAX_STEPS;
+        for (let step = 0; step < stepBudget; step++) {
           const assistant: Message = { id: uid(), role: 'assistant', content: '', model: modelId };
           cur = assistant;
           curText = '';
@@ -530,6 +535,7 @@ export default function ChatPage() {
             aiName: aiNameRef.current ?? undefined,
             persona: personaRef.current,
             tools: useTools,
+            godmode: godmodeRef.current,
             voice: !!speaker,
             voiceLang,
             token,
@@ -871,12 +877,12 @@ export default function ChatPage() {
   return (
     <div className="relative flex h-[100dvh] overflow-hidden bg-canvas text-zinc-100 transition-colors duration-500">
       <AlarmRinger />
-      {/* ambient background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-cyan-500/[0.13] blur-[120px]" />
-        <div className="absolute -right-40 top-1/3 h-[32rem] w-[32rem] rounded-full bg-accent/[0.14] blur-[130px]" />
-        <div className="absolute bottom-[-12rem] left-1/3 h-[26rem] w-[26rem] rounded-full bg-accent/[0.07] blur-[120px]" />
-        <div className="bg-grid absolute inset-0" />
+      {/* Quiet, high-contrast workspace atmosphere */}
+      <div aria-hidden className="workspace-atmosphere pointer-events-none absolute inset-0">
+        <div className="workspace-glow workspace-glow-a" />
+        <div className="workspace-glow workspace-glow-b" />
+        <div className="workspace-grid" />
+        <div className="workspace-grain" />
       </div>
 
       <Sidebar
@@ -886,6 +892,13 @@ export default function ChatPage() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onNew={newChat}
+        agentMode={godmode}
+        onAgentMode={() => {
+          const selected = getModel(model);
+          if (!selected.tools) setModel(DEFAULT_MODEL_ID);
+          setAgent(true);
+          setGodmode(true);
+        }}
         onSelect={selectChat}
         onDelete={deleteChat}
         profile={profile}
@@ -904,127 +917,84 @@ export default function ChatPage() {
         onClose={aiName ? () => setNameOpen(false) : undefined}
       />
 
-      <section className="relative z-10 flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.07] bg-black/20 px-4 backdrop-blur-xl">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open sidebar"
-            className="rounded-xl p-2 text-zinc-300 transition hover:bg-white/10 md:hidden"
-          >
-            <MenuIcon />
+      <section className="workspace-main relative z-10 flex min-w-0 flex-1 flex-col">
+        <header className="workspace-topbar clean-topbar flex h-[68px] shrink-0 items-center gap-3 border-b border-white/[0.07] px-4 backdrop-blur-2xl sm:px-6">
+          <button onClick={() => setSidebarOpen(true)} aria-label="Open sidebar" className="rounded-xl p-2 text-zinc-300 transition hover:bg-white/10 md:hidden"><MenuIcon /></button>
+          <button onClick={newChat} className="topbar-brand hidden items-center gap-2.5 md:flex" aria-label="New NamelessAI chat">
+            <span className="topbar-brand-mark">N</span><span>NAMELESS<span>LABS</span></span>
           </button>
-          <ModelPicker value={model} onChange={setModel} disabled={loading} tier={tier} />
-          <PersonaButton value={persona} onChange={changePersona} disabled={loading} />
-          <span
-            title={`Nameless Labs AI ${APP_VERSION_LABEL} ${APP_CODENAME}`}
-            className="hidden select-none rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[10px] tracking-wide text-zinc-500 lg:inline"
-          >
-            {APP_VERSION_LABEL}
-          </span>
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={() => { setGodmode((value) => { const next = !value; if (next) setAgent(true); return next; }); }}
-              disabled={!current.tools}
-              aria-pressed={godmode}
-              title={current.tools ? 'Godmode: plan and execute complex tasks with available tools' : 'Choose a tool-capable model to use Godmode'}
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${godmode ? 'border-violet-300/50 bg-violet-400/15 text-violet-200 shadow-[0_0_18px_-7px_rgba(167,139,250,0.8)]' : 'border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white'}`}
-            >
-              <SparkIcon width={14} height={14} />
-              <span className="hidden sm:inline">Godmode</span>
+          <nav className="mode-switch" aria-label="Workspace mode">
+            <button type="button" onClick={() => { setGodmode(false); setAgent(false); setControlsOpen(false); }} aria-pressed={!godmode} className={!godmode ? 'mode-tab mode-tab-active' : 'mode-tab'}>
+              <span className="mode-tab-icon">✳</span> AI
             </button>
-            <button
-              onClick={toggleAgent}
-              disabled={!current.tools}
-              aria-pressed={agent && current.tools}
-              title={
-                current.tools
-                  ? agent
-                    ? 'Actions on: alarms, email, tasks, web, currency, weather… (click to turn off)'
-                    : 'Actions off (click to turn on)'
-                  : `${current.name} can’t use tools. Pick Lyric, Vega, Aether or NamelessAI for actions.`
-              }
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                agent && current.tools
-                  ? 'border-cyan-300/40 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/15'
-                  : 'border-white/10 text-zinc-400 hover:bg-white/10'
-              }`}
-            >
-              <WrenchIcon width={14} height={14} />
-              <span className="hidden sm:inline">Actions</span>
+            <button type="button" onClick={() => { if (!getModel(model).tools) setModel(DEFAULT_MODEL_ID); setAgent(true); setGodmode(true); setControlsOpen(false); }} aria-pressed={godmode} className={godmode ? 'mode-tab mode-tab-agent mode-tab-active' : 'mode-tab mode-tab-agent'}>
+              <span className="mode-tab-icon">⌘</span> Agent <span className="mode-tab-live">EXECUTE</span>
             </button>
-            <button
-              onClick={() => setDevicesOpen(true)}
-              aria-label="Devices"
-              title="Devices: let the AI control this device and your computer"
-              className="rounded-xl border border-white/10 p-2 text-zinc-300 transition hover:bg-white/10 hover:text-white"
-            >
-              <LaptopIcon width={16} height={16} />
-            </button>
+          </nav>
+          <div className="ml-auto flex items-center gap-1.5">
+            <span className={`hidden items-center gap-2 px-2 text-[10px] font-medium tracking-wide sm:flex ${loading ? 'text-amber-300' : 'text-zinc-500'}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'animate-pulse bg-amber-400' : 'bg-emerald-400'}`} />
+              {loading ? (godmode ? 'AGENT RUNNING' : 'THINKING') : 'READY'}
+            </span>
+            <div className="relative">
+              <button type="button" onClick={() => setControlsOpen((v) => !v)} aria-expanded={controlsOpen} aria-label="Workspace settings" title="Model and workspace settings" className={`topbar-icon ${controlsOpen ? 'topbar-icon-active' : ''}`}>
+                <WrenchIcon width={16} height={16} />
+              </button>
+              {controlsOpen && <div className="topbar-controls-panel">
+                <p className="topbar-controls-label">INTELLIGENCE SETTINGS</p>
+                <ModelPicker value={model} onChange={setModel} disabled={loading} tier={tier} />
+                <PersonaButton value={persona} onChange={changePersona} disabled={loading} />
+                <div className="topbar-controls-meta">Current engine · {current.name}</div>
+              </div>}
+            </div>
+            <button onClick={() => setDevicesOpen(true)} aria-label="Devices" title="Connected device tools" className="topbar-icon"><LaptopIcon width={16} height={16} /></button>
             <AlarmsButton />
             <ThemeButton />
-            <span className="hidden items-center gap-2 text-xs text-zinc-500 sm:flex">
-              <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'animate-pulse bg-amber-400' : 'bg-emerald-400'}`} />
-              {loading ? 'Generating…' : 'Ready'}
-            </span>
-            {messages.length > 0 && (
-              <button
-                onClick={exportChat}
-                aria-label="Export chat as Markdown"
-                title="Export chat as Markdown"
-                className="rounded-xl border border-white/10 p-2 text-zinc-300 transition hover:bg-white/10 hover:text-white"
-              >
-                <DownloadIcon />
-              </button>
-            )}
-            <button
-              onClick={newChat}
-              aria-label="New chat"
-              className="rounded-xl border border-white/10 p-2 text-zinc-300 transition hover:bg-white/10 hover:text-white md:hidden"
-            >
-              <PlusIcon />
-            </button>
+            {messages.length > 0 && <button onClick={exportChat} aria-label="Export chat as Markdown" title="Export this conversation" className="topbar-icon"><DownloadIcon /></button>}
+            <button onClick={newChat} aria-label="New chat" title="New conversation" className="topbar-new"><PlusIcon /></button>
           </div>
         </header>
 
         {godmode && (
-          <div className="mx-auto mt-3 flex w-full max-w-3xl items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/[0.07] px-3 py-2 text-xs text-violet-100">
-            <SparkIcon width={14} height={14} />
-            <span className="flex-1">Godmode is on · task planning, available tools and verification enabled</span>
-            <button onClick={() => setGodmode(false)} className="text-violet-200/70 transition hover:text-white">Turn off</button>
+          <div className="agent-run-strip">
+            <span className="agent-run-pulse" /><b>AGENT WORKSPACE</b><span>Tools enabled</span><span>Up to 20 execution steps</span>
+            <button onClick={() => { setGodmode(false); setAgent(false); }}>Return to AI</button>
           </div>
         )}
         <div ref={scrollRef} onScroll={onScroll} className="scroll-thin flex-1 overflow-y-auto">
           {messages.length === 0 ? (
-            <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col items-center justify-center px-5 py-10 text-center">
-              <div className="animate-float">
-                <ModelOrb model={current} size={72} />
+            godmode ? (
+              <AgentLaunchpad onLaunch={send} onVoice={voice.supported ? startVoice : undefined} />
+            ) : (
+              <div className="home-stage mx-auto flex min-h-full w-full max-w-[1440px] flex-col px-5 pb-10 pt-7 sm:px-8 lg:px-12">
+                <div className="home-kicker">
+                  <span className="home-kicker-mark">N</span>
+                  <span>Nameless Labs <i>/</i> Personal intelligence workspace</span>
+                  <span className="home-kicker-version">{APP_VERSION_LABEL}</span>
+                </div>
+                <div className="home-hero">
+                  <div className="home-hero-copy">
+                    <p className="home-overline"><span /> YOUR NEXT MOVE STARTS HERE</p>
+                    <h2>Make it<br /><em>happen.</em></h2>
+                    <p className="home-intro">{firstName ? `Good to have you here, ${firstName}. ` : ''}Think out loud, explore ideas, understand files, and turn questions into something useful.</p>
+                    <div className="home-model-line">
+                      <span className="home-model-orb"><ModelOrb model={current} size={16} /></span>
+                      <span>POWERED BY <b>{aiName ?? current.name}</b></span>
+                      <button onClick={() => setNameOpen(true)}>PERSONALISE ↗</button>
+                    </div>
+                  </div>
+                  <div className="home-hero-art" aria-hidden="true">
+                    <div className="home-art-index">NL—001</div><div className="home-art-ring home-art-ring-one" /><div className="home-art-ring home-art-ring-two" />
+                    <div className="home-art-core"><span>n</span></div><div className="home-art-cross home-art-cross-a" /><div className="home-art-cross home-art-cross-b" />
+                    <div className="home-art-caption">IDEAS IN<br />MOTION</div><div className="home-art-foot">THINK / MAKE / REPEAT</div>
+                  </div>
+                </div>
+                <WorkspaceLaunchpad onLaunch={send} onVoice={voice.supported ? startVoice : undefined} />
+                <div className="home-footer"><span>BUILT FOR CURIOSITY. DESIGNED FOR MOMENTUM.</span><span>{APP_CODENAME} <i>·</i> {APP_VERSION_LABEL}</span></div>
               </div>
-              <h2 className="mt-8 bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl">
-                {firstName ? `Hey ${firstName}, what are we building?` : 'What are we building today?'}
-              </h2>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-zinc-400">
-                You are chatting with <span className="font-medium text-zinc-200">{aiName ?? current.name}</span>
-                {aiName && aiName !== current.name ? <span className="text-zinc-500"> (on {current.name})</span> : null}. {current.tagline}{' '}
-                <button onClick={() => setNameOpen(true)} className="text-cyan-300 underline-offset-2 transition hover:underline">
-                  Rename
-                </button>
-              </p>
-
-              <div className="mt-9 grid w-full gap-2.5 sm:grid-cols-2">
-                {(agent && current.tools ? [...SUGGESTIONS.slice(0, 2), ...ACTION_SUGGESTIONS.slice(0, 6)] : SUGGESTIONS).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left text-sm text-zinc-300 transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.06] hover:text-white"
-                  >
-                    <SparkIcon width={16} height={16} className="mt-0.5 shrink-0 text-cyan-300/70 transition group-hover:text-cyan-300" />
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
+            )
           ) : (
-            <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-8">
+            <div className="mx-auto w-full max-w-4xl space-y-9 px-4 py-9 sm:px-6">
               {longVoiceTranscript ? <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-sm text-zinc-400">This voice conversation is lengthy. Its full transcript is available in the sidebar.</p> : messages.map((m, i) => (
                 <MessageView
                   key={m.id}
@@ -1103,7 +1073,7 @@ export default function ChatPage() {
         )}
         <Composer
           loading={loading || uploading}
-          placeholder={`Message ${aiName ?? current.name}…`}
+          placeholder={godmode ? 'Describe the outcome. Agent will plan and execute…' : `Message ${aiName ?? current.name}…`}
           onSend={send}
           onStop={stop}
           onVoice={voice.supported ? () => (voice.active ? voice.stop() : startVoice()) : undefined}

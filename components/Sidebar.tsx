@@ -16,6 +16,8 @@ export function Sidebar({
   open,
   onClose,
   onNew,
+  onAgentMode,
+  agentMode,
   onSelect,
   onDelete,
   profile,
@@ -30,6 +32,8 @@ export function Sidebar({
   open: boolean;
   onClose: () => void;
   onNew: () => void;
+  onAgentMode: () => void;
+  agentMode: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   profile: Profile | null;
@@ -50,7 +54,7 @@ export function Sidebar({
     <>
       {open && <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden" onClick={onClose} />}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[18.5rem] flex-col border-r border-white/[0.08] bg-canvas/90 backdrop-blur-2xl transition-transform duration-300 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[18.5rem] flex-col border-r border-white/[0.08] bg-[#0a0d0b]/95 backdrop-blur-2xl transition-transform duration-300 md:static md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -80,6 +84,26 @@ export function Sidebar({
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm font-medium text-white transition hover:border-cyan-400/40 hover:bg-white/[0.09]"
           >
             <PlusIcon width={16} height={16} /> New chat
+          </button>
+        </div>
+
+        <div className="px-4 pb-2">
+          <button
+            type="button"
+            onClick={() => {
+              onAgentMode();
+              onClose();
+            }}
+            className={`group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${agentMode ? "border-lime-300/35 bg-lime-300/[0.09] shadow-[0_0_22px_-12px_rgba(190,242,100,0.55)]" : "border-white/10 bg-white/[0.025] hover:border-lime-300/25 hover:bg-lime-300/[0.045]"}`}
+            aria-label="Open Agent Mode"
+            aria-pressed={agentMode}
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-lime-300/20 bg-lime-300/[0.07] text-lg text-lime-200">✧</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-lime-100">Agent Mode</span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-zinc-400">Plan · use tools · verify results</span>
+            </span>
+            <span className={`rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${agentMode ? "border-violet-300/35 text-violet-100" : "border-violet-300/20 text-violet-200/80"}`}>{agentMode ? "ON" : "BETA"}</span>
           </button>
         </div>
 

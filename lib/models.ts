@@ -15,9 +15,9 @@ export type ModelDef = {
 export const MODELS: ModelDef[] = [
   {
     id: 'nameless-ai',
-    name: 'NamelessAI (Custom Fine-Tuned)',
+    name: 'NamelessAI Core',
     badge: 'Custom',
-    tagline: 'Our signature fine-tuned model, tuned for sharp engineering answers.',
+    tagline: 'Our default assistant, powered by the configured base model and workspace tools.',
     accent: ['#22d3ee', '#a78bfa'],
     tools: true,
   },
