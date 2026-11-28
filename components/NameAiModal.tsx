@@ -84,7 +84,7 @@ export function NameAiModal({
             {onClose ? (
               <button onClick={onClose} className="transition hover:text-zinc-300">Cancel</button>
             ) : (
-              <button onClick={() => onSave('NamelessAI')} className="transition hover:text-zinc-300">Use default (NamelessAI)</button>
+              <button onClick={() => onSave('NamelessAI', avatar)} className="transition hover:text-zinc-300">Use default (NamelessAI)</button>
             )}
           </div>
         </div>
