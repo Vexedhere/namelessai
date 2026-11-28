@@ -312,3 +312,9 @@ html,body{transition:background-color .35s ease,color .35s ease}
 .personal-quick-prompts button{min-width:145px;justify-content:space-between;text-align:left}
 .personal-quick-copy{display:grid;gap:3px}.personal-quick-copy b{font-size:11px;font-weight:650}.personal-quick-copy small{font-size:9px;color:#a1a1aa}
 @media(max-width:640px){.topbar-ai-identity{padding:5px}.topbar-ai-edit{display:none}.personal-quick-prompts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.personal-quick-prompts button{min-width:0}}
+
+.composer-model-switch{align-self:center;flex:0 0 auto}
+.composer-model-switch>div>button{max-width:180px;border-radius:999px!important;background:rgba(255,255,255,.045)!important;padding:7px 10px!important;font-size:11px!important}
+.workspace-composer-box{flex-wrap:wrap}
+.workspace-composer-box textarea{min-width:120px}
+@media(max-width:640px){.composer-model-switch>div>button{max-width:118px}.composer-model-switch>div>button span:nth-child(2){max-width:65px}}
