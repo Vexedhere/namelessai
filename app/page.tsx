@@ -80,7 +80,7 @@ export default function ChatPage() {
   const [authOpen, setAuthOpen] = useState(false);
   const [cloudReady, setCloudReady] = useState(false);
   const [sync, setSync] = useState<'off' | 'syncing' | 'synced' | 'error'>('off');
-  const [tier, setTier] = useState<'FREE' | 'PLUS' | 'PRO'>('FREE');
+  const [tier, setTier] = useState<'FREE' | 'BASE' | 'PLUS' | 'PRO'>('FREE');
   const syncedRef = useRef<Map<string, number>>(new Map());
   const { user, profile, ready: authReady } = useAuth();
   const userId = user?.id ?? null;
@@ -214,7 +214,7 @@ export default function ChatPage() {
     if (!sb || !userId) { setTier('FREE'); return; }
     sb.from('profiles').select('tier').eq('id', userId).maybeSingle().then(({ data }) => {
       const value = data?.tier;
-      setTier(value === 'PRO' || value === 'PLUS' ? value : 'FREE');
+      setTier(value === 'PRO' || value === 'PLUS' || value === 'BASE' ? value : 'FREE');
     });
   }, [userId]);
 
@@ -809,7 +809,7 @@ export default function ChatPage() {
         const m = MODELS.find((x) => x.id.toLowerCase() === q) ?? MODELS.find((x) => x.name.toLowerCase().includes(q) || x.id.toLowerCase().includes(q));
         if (!m) return `No model matches "${cmd.query}". Available: ${MODELS.map((x) => x.name).join(', ')}.`;
         const required = m.id === 'aether-pro' ? 'PLUS' : m.id === 'quasar-apex' ? 'PRO' : 'FREE';
-        if ((required === 'PLUS' && tier === 'FREE') || (required === 'PRO' && tier !== 'PRO')) return `${m.name} needs the ${required} plan, so I can’t switch to it.`;
+        if ((required === 'PLUS' && (tier === 'FREE' || tier === 'BASE')) || (required === 'PRO' && tier !== 'PRO')) return `${m.name} needs the ${required} plan, so I can’t switch to it.`;
         setModel(m.id);
         return `Switched to ${m.name} for the next message.${m.tools ? '' : ' (This model cannot use tools.)'}`;
       }
