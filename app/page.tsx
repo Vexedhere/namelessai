@@ -81,6 +81,7 @@ export default function ChatPage() {
   const [cloudReady, setCloudReady] = useState(false);
   const [sync, setSync] = useState<'off' | 'syncing' | 'synced' | 'error'>('off');
   const [tier, setTier] = useState<'FREE' | 'BASE' | 'PLUS' | 'PRO'>('FREE');
+  const [modelPool, setModelPool] = useState<{ remaining: number; limit: number; used: number; reset_at?: string | null } | null>(null);
   const syncedRef = useRef<Map<string, number>>(new Map());
   const { user, profile, ready: authReady } = useAuth();
   const userId = user?.id ?? null;
@@ -326,6 +327,30 @@ export default function ChatPage() {
       window.clearInterval(timer);
     };
   }, [userId, profile?.name]);
+
+  useEffect(() => {
+    let alive = true;
+    const loadPool = async () => {
+      let sessionId = '';
+      try { sessionId = sessionStorage.getItem('nl_visitor_session') || ''; } catch {}
+      if (!sessionId) return;
+      try {
+        const session = await getSupabase()?.auth.getSession();
+        const token = session?.data.session?.access_token;
+        const response = await fetch('/api/model-usage?session_id=' + encodeURIComponent(sessionId), {
+          headers: token ? { Authorization: 'Bearer ' + token } : {},
+          cache: 'no-store',
+        });
+        if (!alive || !response.ok) return;
+        const data = await response.json();
+        setModelPool({ remaining: Number(data.remaining) || 0, limit: Number(data.limit) || 5, used: Number(data.used) || 0, reset_at: data.reset_at || null });
+      } catch { /* keep the last known pool status */ }
+    };
+    void loadPool();
+    const interval = window.setInterval(loadPool, 30_000);
+    window.addEventListener('focus', loadPool);
+    return () => { alive = false; window.clearInterval(interval); window.removeEventListener('focus', loadPool); };
+  }, [userId, tier, loading]);
 
   const active = useMemo(() => chats.find((c) => c.id === activeId) ?? null, [chats, activeId]);
   const messages = active?.messages ?? [];
@@ -1144,6 +1169,8 @@ export default function ChatPage() {
           model={model}
           onModelChange={setModel}
           tier={tier}
+          poolRemaining={modelPool?.remaining}
+          poolLimit={modelPool?.limit}
         />
       </section>
     </div>
