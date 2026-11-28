@@ -1,67 +1,120 @@
 'use client';
-
+import { useEffect, useMemo, useState } from 'react';
 import type { Chat } from '@/lib/types';
-
-type Props = {
-  chats: Chat[];
-  modelName: string;
-  signedIn: boolean;
-  onLaunch: (prompt: string) => void;
-  onAgent: () => void;
-  onTools: () => void;
-  onDevices: () => void;
-  onVoice?: () => void;
-  onSelectChat: (id: string) => void;
-};
-
-const starterPrompt = 'Help me work through this. Start by understanding the outcome I want, then give me a clear and useful next step.';
-
-export function CommandDashboard({ chats, modelName, signedIn, onLaunch, onAgent, onTools, onDevices, onVoice, onSelectChat }: Props) {
-  const recent = [...chats].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 4);
-  return (
-    <main className="command-dashboard">
-      <div className="command-dashboard-head">
-        <div>
-          <p className="command-eyebrow"><span /> WORKSPACE / OVERVIEW</p>
-          <h1>Your work, <em>in motion.</em></h1>
-          <p className="command-lede">A focused space to think, make, research and get things done.</p>
-        </div>
-        <div className="command-session"><span className="command-session-dot" /><span>{signedIn ? 'ACCOUNT SYNC ENABLED' : 'GUEST SESSION'}</span></div>
-      </div>
-      <section className="command-feature-grid" aria-label="Workspace actions">
-        <button className="command-feature command-feature-primary" onClick={() => onLaunch(starterPrompt)}>
-          <span className="command-feature-index">01 / CONVERSATION</span><span className="command-feature-symbol">↗</span>
-          <strong>Start with<br />a question.</strong><span className="command-feature-copy">Explore an idea, solve a problem, or build something new.</span>
-          <span className="command-feature-link">START A CHAT <i>↗</i></span>
-        </button>
-        <button className="command-feature command-feature-agent" onClick={onAgent}>
-          <span className="command-feature-index">02 / EXECUTION</span><span className="command-feature-symbol">⌘</span>
-          <strong>Give it<br />a mission.</strong><span className="command-feature-copy">Set an outcome. Let Agent plan, act with enabled tools, and report back.</span>
-          <span className="command-feature-link">OPEN AGENT <i>↗</i></span>
-        </button>
-        <button className="command-feature command-feature-tools" onClick={onTools}>
-          <span className="command-feature-index">03 / CAPABILITIES</span><span className="command-feature-symbol">⌕</span>
-          <strong>Find the<br />right tool.</strong><span className="command-feature-copy">Browse the capabilities available in this workspace.</span>
-          <span className="command-feature-link">EXPLORE TOOLS <i>↗</i></span>
-        </button>
-      </section>
-      <section className="command-lower-grid">
-        <div className="command-panel command-recent">
-          <div className="command-panel-heading"><div><p>YOUR WORKSPACE</p><h2>Recent conversations</h2></div><span>{chats.length.toString().padStart(2, '0')} TOTAL</span></div>
-          {recent.length ? <div className="command-recent-list">{recent.map((chat, index) => (
-            <button key={chat.id} onClick={() => onSelectChat(chat.id)} className="command-recent-item">
-              <span className="command-recent-number">{String(index + 1).padStart(2, '0')}</span><span className="command-recent-title">{chat.title || 'Untitled conversation'}</span><span className="command-recent-arrow">↗</span>
-            </button>
-          ))}</div> : <div className="command-empty-state"><span>—</span><p>Your conversations will appear here.</p><small>Start a chat to create your first workspace item.</small></div>}
-        </div>
-        <div className="command-panel command-tools-panel">
-          <div className="command-panel-heading"><div><p>MORE WAYS TO WORK</p><h2>Workspace tools</h2></div><span>QUICK ACCESS</span></div>
-          <button className="command-utility" onClick={onDevices}><span className="command-utility-icon">▣</span><span><b>Connected devices</b><small>Manage device tools and connections</small></span><i>↗</i></button>
-          {onVoice && <button className="command-utility" onClick={onVoice}><span className="command-utility-icon">◉</span><span><b>Voice workspace</b><small>Speak naturally with your assistant</small></span><i>↗</i></button>}
-          <div className="command-model-note"><span>ACTIVE MODEL</span><b>{modelName}</b><small>Change models from the workspace controls.</small></div>
-        </div>
-      </section>
-      <footer className="command-dashboard-footer"><span>NAMELESS LABS <i>·</i> WORKSPACE</span><span>{signedIn ? 'YOUR CHATS SYNC WITH YOUR ACCOUNT' : 'SIGN IN TO KEEP YOUR CONVERSATIONS'}</span></footer>
-    </main>
-  );
+type Props = { chats: Chat[]; modelName: string; signedIn: boolean; userName?: string; onLaunch: (prompt: string) => void; onAgent: () => void; onTools: () => void; onDevices: () => void; onVoice?: () => void; onSelectChat: (id: string) => void; };
+const leads = [
+  "What's on your mind?",
+  "What are we making today?",
+  "Your next idea starts here.",
+  "What would you like to figure out?",
+  "Ready when you are.",
+  "Let's make something useful.",
+  "What's your next move?",
+  "Need a second brain?",
+  "Where should we start?",
+  "Bring me a challenge.",
+  "Got something on your mind?",
+  "What can I help you untangle?",
+  "Let's turn that thought into a plan.",
+  "What are you curious about today?",
+  "A fresh page. A fresh idea.",
+  "What should we explore?",
+  "Let's get the hard part moving.",
+  "What are you working towards?",
+  "Tell me what you're imagining.",
+  "What's the big picture?",
+  "Need clarity on something?",
+  "Let's build your next breakthrough.",
+  "What would make today easier?",
+  "What problem are we solving?",
+  "Start anywhere. I'll keep up.",
+  "What do you want to get done?",
+  "Let's connect the dots.",
+  "What's worth your attention today?",
+  "Have an idea worth testing?",
+  "Let's give that idea shape.",
+  "What should we make progress on?",
+  "What's the question behind the question?",
+  "Want to think out loud?",
+  "Let's find a smarter way.",
+  "What are you planning next?",
+  "What's one thing we can improve?",
+  "Let's make the complex simple.",
+  "What do you want to understand?",
+  "What's on your project list?",
+  "Ready to explore a new angle?",
+  "Let's turn curiosity into momentum.",
+  "What needs your focus right now?",
+  "What are you trying to solve?",
+  "Your workspace is ready.",
+  "Let's map out the next step.",
+  "What would you like to create?",
+  "Got a task I can take off your plate?",
+  "Let's make your next move count.",
+  "What's the idea you keep coming back to?",
+  "Where can we create momentum?",
+  "Want to research something deeply?",
+  "Let's work through it together.",
+  "What are you trying to make possible?",
+  "What's the next thing to ship?",
+  "Let's sketch out a direction.",
+  "What would you like to improve?",
+  "Have a question you've been sitting on?",
+  "Let's make room for a better idea.",
+  "What's the outcome you're after?",
+  "Let's start with the interesting part.",
+  "Need a plan, a draft, or a breakthrough?",
+  "What's the smartest next step?",
+  "Let's turn notes into action.",
+  "What should we investigate?",
+  "What are you building lately?",
+  "Let's get from idea to execution.",
+  "What would you like to explore first?",
+  "Need help seeing the whole picture?",
+  "Let's make progress, not noise.",
+  "What do you want to get off your mind?",
+  "Have something you want to understand better?",
+  "Let's pressure-test an idea.",
+  "What are we figuring out today?",
+  "Your next chapter starts with a question.",
+  "What could be simpler?",
+  "Let's make the next step obvious.",
+  "What's something new you want to learn?",
+  "Want to turn a rough thought into something real?",
+  "What deserves a closer look?",
+  "Let's get your thoughts in order.",
+  "What's the mission today?",
+  "What are you aiming to accomplish?",
+  "Let's find the signal in the noise.",
+  "What's one thing you'd love to finish?",
+  "Want to explore a possibility?",
+  "Let's make a little progress.",
+  "What would you like a hand with?",
+  "What are you curious enough to chase?",
+  "Let's bring some structure to that idea.",
+  "What's the first thing on your mind?",
+  "Ready to make something happen?",
+  "What should we tackle first?",
+  "Let's turn a question into a direction.",
+  "What are you thinking about lately?",
+  "Need help connecting an idea to a plan?",
+  "Let's start with what matters.",
+  "What's the next interesting problem?",
+  "Your ideas have room to grow here.",
+  "What would you like to work on together?",
+  "Take a breath. Where do we begin?"
+];
+function dayPart(date: Date) { const h=date.getHours(); if(h<5)return 'Late night'; if(h<12)return 'Morning'; if(h<17)return 'Afternoon'; if(h<21)return 'Evening'; return 'Tonight'; }
+export function CommandDashboard({chats,modelName,signedIn,userName,onLaunch,onAgent,onTools,onDevices,onVoice,onSelectChat}:Props) {
+ const [now,setNow]=useState(()=>new Date()); const [leadIndex,setLeadIndex]=useState(()=>Math.floor(Math.random()*leads.length));
+ const firstName=userName?.trim().split(/\s+/)[0]; const recent=useMemo(()=>[...chats].sort((a,b)=>b.updatedAt-a.updatedAt).slice(0,3),[chats]);
+ useEffect(()=>{const clock=window.setInterval(()=>setNow(new Date()),60000);const rotate=window.setInterval(()=>setLeadIndex(i=>(i+1+Math.floor(Math.random()*11))%leads.length),9000);return()=>{window.clearInterval(clock);window.clearInterval(rotate)}},[]);
+ const quick=[{label:'Help me plan',prompt:'Help me plan my next steps. Ask only what you need to know.'},{label:'Write something',prompt:'Help me write something clear and polished.'},{label:'Explore an idea',prompt:'Help me explore an idea, challenge assumptions, and find useful directions.'},{label:'Understand a topic',prompt:'Teach me this topic clearly, with examples and a practical explanation.'}];
+ return <main className="command-dashboard personal-home">
+  <div className="personal-home-top"><div className="personal-home-status"><span className="personal-home-live"/> YOUR SPACE · {signedIn?'SYNCED':'GUEST MODE'}</div><div className="personal-home-model">{modelName}</div></div>
+  <section className="personal-hero"><div className="personal-hero-orbit" aria-hidden="true"><span/><span/><span/></div><div className="personal-hero-copy"><div className="personal-hero-eyebrow">{dayPart(now)}{firstName?', '+firstName:''}</div><h1 key={leadIndex} className="personal-hero-lead">{leads[leadIndex]}</h1><p className="personal-hero-subtitle">A little space to think clearly, explore freely, and make things happen.</p></div><div className="personal-quick-prompts">{quick.map(x=><button key={x.label} onClick={()=>onLaunch(x.prompt)}>{x.label}<span>↗</span></button>)}</div></section>
+  <section className="personal-work-row"><button className="personal-work-card personal-work-agent" onClick={onAgent}><span className="personal-work-icon">⌘</span><span><b>Agent workspace</b><small>Plan, use tools, and work through a mission</small></span><i>↗</i></button><button className="personal-work-card" onClick={onTools}><span className="personal-work-icon">✳</span><span><b>Explore capabilities</b><small>Discover the tools available to you</small></span><i>↗</i></button><button className="personal-work-card" onClick={onDevices}><span className="personal-work-icon">⌑</span><span><b>Connected devices</b><small>Use supported device actions</small></span><i>↗</i></button></section>
+  {recent.length>0&&<section className="personal-recent"><div className="personal-recent-heading"><div><span>KEEP THE MOMENTUM</span><h2>Pick up where you left off</h2></div><span className="personal-recent-count">{String(chats.length).padStart(2,'0')} CHATS</span></div><div className="personal-recent-list">{recent.map(chat=><button key={chat.id} onClick={()=>onSelectChat(chat.id)}><span className="personal-recent-dot"/><span>{chat.title||'Untitled conversation'}</span><i>↗</i></button>)}</div></section>}
+  <div className="personal-home-footer"><span>NAMELESS LABS</span><span>{onVoice?'VOICE IS READY WHEN YOU ARE':'A BETTER WAY TO THINK AND CREATE'}</span></div>
+ </main>;
 }
