@@ -752,6 +752,17 @@ export default function ChatPage() {
     stickRef.current = true;
   }, []);
 
+  useEffect(() => {
+    const onShortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        newChat();
+      }
+    };
+    window.addEventListener('keydown', onShortcut);
+    return () => window.removeEventListener('keydown', onShortcut);
+  }, [newChat]);
+
   const selectChat = useCallback(
     (id: string) => {
       if (id === activeId) return;
