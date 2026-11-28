@@ -1017,6 +1017,7 @@ export default function ChatPage() {
             ) : (
               <CommandDashboard
                 chats={chats}
+                userName={profile?.name || undefined}
                 modelName={aiName ?? current.name}
                 signedIn={!!user}
                 onLaunch={send}
