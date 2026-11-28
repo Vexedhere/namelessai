@@ -68,7 +68,7 @@ export function Sidebar({
             <div className="leading-tight">
               <h1 className="text-[15px] font-semibold tracking-tight text-white">Nameless Labs</h1>
               <p className="text-[11px] text-zinc-500">
-                AI workspace · <span className="font-mono">{APP_VERSION_LABEL}</span>
+                A quieter place to get work done · <span className="font-mono">{APP_VERSION_LABEL}</span>
               </p>
             </div>
           </div>
@@ -138,7 +138,7 @@ export function Sidebar({
           </section>
         )}
         <nav className="scroll-thin flex-1 overflow-y-auto px-3 py-2" aria-label="Chat history">
-          <p className="px-2 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Recent</p>
+          <p className="px-2 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">CONVERSATIONS</p>
           {sorted.length === 0 && (
             <p className="px-2 text-sm text-zinc-600">{q ? 'No chats match your search.' : profile ? 'Your conversations will appear here.' : 'Sign in to save your chats. As a guest, they disappear when you close this page.'}</p>
           )}
