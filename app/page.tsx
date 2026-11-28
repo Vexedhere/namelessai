@@ -75,6 +75,17 @@ export default function ChatPage() {
   const [uploading, setUploading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [preferences, setPreferences] = useState({
+    density: 'comfortable' as 'comfortable' | 'compact',
+    textSize: 'normal' as 'small' | 'normal' | 'large',
+    contentWidth: 'wide' as 'standard' | 'wide' | 'full',
+    codeWrap: false,
+    animations: true,
+    enterToSend: true,
+    showTips: true,
+    developerMode: true,
+  });
   const [toolsOpen, setToolsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -435,7 +446,7 @@ export default function ChatPage() {
           if (st.theme) applyTheme(st.theme);
           if (st.persona && PERSONA_IDS.has(st.persona)) setPersona(st.persona);
           if (st.model && MODELS.some((m) => m.id === st.model)) setModel(st.model);
-          if (st.voiceLang) setVoiceLang(st.voiceLang);
+          if (st.voiceLang) setVoiceLang(st.voiceLang);\n          if (st.preferences) setPreferences((cur) => ({ ...cur, ...st.preferences }));
         }
         if (st?.aiAvatar) setAiAvatar(st.aiAvatar);
         const name = st?.aiName || aiNameRef.current; // a name picked as a guest in this tab carries over
@@ -477,7 +488,7 @@ export default function ChatPage() {
   useEffect(() => {
     const sb = getSupabase();
     if (!accountReady || !userId || !sb) return;
-    const settings = { aiName, aiAvatar, theme: themeId, persona, model, voiceLang, agent };
+    const settings = { aiName, aiAvatar, theme: themeId, persona, model, voiceLang, agent, preferences };
     const json = JSON.stringify(settings);
     if (json === lastSettingsRef.current) return;
     const t = setTimeout(async () => {
@@ -489,7 +500,7 @@ export default function ChatPage() {
       }
     }, 800);
     return () => clearTimeout(t);
-  }, [accountReady, userId, aiName, aiAvatar, themeId, persona, model, voiceLang, agent]);
+  }, [accountReady, userId, aiName, aiAvatar, themeId, persona, model, voiceLang, agent, preferences]);
 
   const saveAiName = useCallback((raw: string, avatar = 'sparkles') => {
     const n = cleanAiName(raw);
@@ -959,7 +970,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="relative flex h-[100dvh] overflow-hidden bg-canvas text-zinc-100 transition-colors duration-500">
+    <div data-density={preferences.density} data-text-size={preferences.textSize} data-content-width={preferences.contentWidth} data-code-wrap={preferences.codeWrap ? "on" : "off"} data-motion={preferences.animations ? "on" : "off"} className="nl-app-shell relative flex h-[100dvh] overflow-hidden bg-canvas text-zinc-100 transition-colors duration-500">
       <AlarmRinger />
       {/* Quiet, high-contrast workspace atmosphere */}
       <div aria-hidden className="workspace-atmosphere pointer-events-none absolute inset-0">
@@ -1002,6 +1013,33 @@ export default function ChatPage() {
       <DevicesPanel open={devicesOpen} onClose={() => setDevicesOpen(false)} />
       {toolsOpen && <ToolsHub onClose={() => setToolsOpen(false)} onRun={(prompt) => { setToolsOpen(false); send(prompt); }} />}
       <AuthModal open={authOpen && !user} onClose={() => setAuthOpen(false)} />
+      {settingsOpen && <div className="nl-settings-overlay" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setSettingsOpen(false); }}>
+        <section className="nl-settings-window" role="dialog" aria-modal="true" aria-labelledby="nl-settings-title">
+          <header className="nl-settings-head"><div><span className="nl-settings-kicker">WORKSPACE CONTROL CENTER</span><h2 id="nl-settings-title">Make it yours.</h2><p>Fine-tune how NamelessAI looks, feels and works.</p></div><button className="nl-icon-btn" onClick={() => setSettingsOpen(false)} aria-label="Close settings">×</button></header>
+          <div className="nl-settings-scroll">
+            <section className="nl-settings-section"><div className="nl-settings-section-title"><span>◉</span><div><b>Identity &amp; intelligence</b><small>Your assistant and thinking style</small></div></div>
+              <div className="nl-settings-row"><div><b>Assistant identity</b><small>Change its name and avatar</small></div><button className="nl-settings-action" onClick={() => { setSettingsOpen(false); setNameOpen(true); }}>Customize <span>↗</span></button></div>
+              <div className="nl-settings-row"><div><b>Default model</b><small>Engine used for new chats</small></div><div className="nl-settings-control"><ModelPicker value={model} onChange={setModel} disabled={loading} tier={tier} /></div></div>
+              <div className="nl-settings-row"><div><b>Personality</b><small>How your assistant responds</small></div><div className="nl-settings-control"><PersonaButton value={persona} onChange={changePersona} disabled={loading} /></div></div>
+              <div className="nl-settings-row"><div><b>Voice language</b><small>Speech recognition and voice output</small></div><select className="nl-settings-select" value={voiceLang} onChange={(e) => setVoiceLang(e.target.value)}>{['en-IN','en-US','en-GB','te-IN','hi-IN','ta-IN','kn-IN','ml-IN'].map(x => <option key={x} value={x}>{({ 'en-IN':'English (India)','en-US':'English (US)','en-GB':'English (UK)','te-IN':'Telugu','hi-IN':'Hindi','ta-IN':'Tamil','kn-IN':'Kannada','ml-IN':'Malayalam' } as Record<string,string>)[x]}</option>)}</select></div>
+            </section>
+            <section className="nl-settings-section"><div className="nl-settings-section-title"><span>◐</span><div><b>Appearance &amp; layout</b><small>Shape your workspace</small></div></div>
+              <div className="nl-settings-row"><div><b>Theme &amp; mood</b><small>Switch instantly, no reload</small></div><ThemeButton /></div>
+              <div className="nl-settings-row"><div><b>Interface density</b><small>Choose your working rhythm</small></div><div className="nl-segment">{(['comfortable','compact'] as const).map(x=><button key={x} onClick={()=>setPreferences(v=>({...v,density:x}))} className={preferences.density===x?'selected':''}>{x==='comfortable'?'Comfort':'Compact'}</button>)}</div></div>
+              <div className="nl-settings-row"><div><b>Text size</b><small>Adjust reading comfort</small></div><div className="nl-segment">{(['small','normal','large'] as const).map(x=><button key={x} onClick={()=>setPreferences(v=>({...v,textSize:x}))} className={preferences.textSize===x?'selected':''}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div></div>
+              <div className="nl-settings-row"><div><b>Chat width</b><small>More room for code and long answers</small></div><div className="nl-segment">{(['standard','wide','full'] as const).map(x=><button key={x} onClick={()=>setPreferences(v=>({...v,contentWidth:x}))} className={preferences.contentWidth===x?'selected':''}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div></div>
+              <div className="nl-settings-row"><div><b>Motion effects</b><small>Subtle transitions and ambient movement</small></div><button className={preferences.animations?'nl-toggle on':'nl-toggle'} role="switch" aria-checked={preferences.animations} onClick={()=>setPreferences(v=>({...v,animations:!v.animations}))}><i /></button></div>
+            </section>
+            <section className="nl-settings-section"><div className="nl-settings-section-title"><span>⌘</span><div><b>Developer experience</b><small>Controls for building and debugging</small></div></div>
+              <div className="nl-settings-row"><div><b>Developer workspace</b><small>Prioritize code tools and build actions</small></div><button className={preferences.developerMode?'nl-toggle on':'nl-toggle'} role="switch" aria-checked={preferences.developerMode} onClick={()=>setPreferences(v=>({...v,developerMode:!v.developerMode}))}><i /></button></div>
+              <div className="nl-settings-row"><div><b>Wrap long code lines</b><small>Keep code inside the message width</small></div><button className={preferences.codeWrap?'nl-toggle on':'nl-toggle'} role="switch" aria-checked={preferences.codeWrap} onClick={()=>setPreferences(v=>({...v,codeWrap:!v.codeWrap}))}><i /></button></div>
+              <div className="nl-settings-row"><div><b>Send with Enter</b><small>Use Shift + Enter for a new line</small></div><button className={preferences.enterToSend?'nl-toggle on':'nl-toggle'} role="switch" aria-checked={preferences.enterToSend} onClick={()=>setPreferences(v=>({...v,enterToSend:!v.enterToSend}))}><i /></button></div>
+              <div className="nl-settings-row"><div><b>Show helpful tips</b><small>Display shortcuts and workflow hints</small></div><button className={preferences.showTips?'nl-toggle on':'nl-toggle'} role="switch" aria-checked={preferences.showTips} onClick={()=>setPreferences(v=>({...v,showTips:!v.showTips}))}><i /></button></div>
+            </section>
+          </div>
+          <footer className="nl-settings-foot"><span>{user ? '✓ Preferences sync to your account' : 'Preferences saved for this tab'}</span><button onClick={() => setSettingsOpen(false)}>Done <span>↗</span></button></footer>
+        </section>
+      </div>}
       <NameAiModal
         open={nameOpen && authReady && !authOpen && !voice.active}
         initial={aiName}
@@ -1012,43 +1050,28 @@ export default function ChatPage() {
       />
 
       <section className="workspace-main relative z-10 flex min-w-0 flex-1 flex-col">
-        <header className="workspace-topbar clean-topbar flex h-[68px] shrink-0 items-center gap-3 border-b border-white/[0.07] px-4 backdrop-blur-2xl sm:px-6">
-          <button onClick={() => setSidebarOpen(true)} aria-label="Open sidebar" className="rounded-xl p-2 text-zinc-300 transition hover:bg-white/10 md:hidden"><MenuIcon /></button>
-          <button onClick={newChat} className="topbar-brand hidden items-center gap-2.5 md:flex" aria-label="New NamelessAI chat">
-            <span className="topbar-brand-mark">N</span><span>NAMELESS<span>LABS</span></span>
-          </button>
-          <button type="button" onClick={() => setNameOpen(true)} className="topbar-ai-identity" title="Personalize your AI assistant"><span className="topbar-ai-avatar">{({sparkles:'✦',bot:'◈',brain:'✺',rocket:'↗',cat:'◡',orbit:'◎',sun:'☼',moon:'☾',leaf:'❋',zap:'ϟ',flame:'♨',heart:'♡'} as Record<string,string>)[aiAvatar] || '✦'}</span><span className="hidden sm:block">{aiName || 'Nameless AI'}</span><span className="topbar-ai-edit">Edit</span></button>
-          <nav className="mode-switch" aria-label="Workspace mode">
-            <button type="button" onClick={() => { setGodmode(false); setAgent(false); setControlsOpen(false); }} aria-pressed={!godmode} className={!godmode ? 'mode-tab mode-tab-active' : 'mode-tab'}>
-              <span className="mode-tab-icon">✳</span> AI
+        <header className="nl-commandbar">
+          <div className="nl-commandbar-left">
+            <button onClick={() => setSidebarOpen(true)} aria-label="Open sidebar" className="nl-icon-btn md:hidden"><MenuIcon /></button>
+            <button onClick={newChat} className="nl-brand" aria-label="New NamelessAI chat"><span className="nl-brand-mark">N</span><span className="hidden sm:block">NAMELESS<span>LABS</span></span></button>
+            <span className="nl-bar-divider hidden sm:block" />
+            <button type="button" onClick={() => setNameOpen(true)} className="nl-assistant-chip" title="Customize your assistant">
+              <span className="nl-assistant-glyph">{({sparkles:'✦',bot:'◈',brain:'✺',rocket:'↗',cat:'◡',orbit:'◎',sun:'☼',moon:'☾',leaf:'❋',zap:'ϟ',flame:'♨',heart:'♡'} as Record<string,string>)[aiAvatar] || '✦'}</span>
+              <span className="nl-assistant-copy"><b>{aiName || 'Nameless AI'}</b><small>PERSONAL WORKSPACE</small></span><span className="nl-chip-edit">⌄</span>
             </button>
-            <button type="button" onClick={() => { if (!getModel(model).tools) setModel(DEFAULT_MODEL_ID); setAgent(true); setGodmode(true); setControlsOpen(false); }} aria-pressed={godmode} className={godmode ? 'mode-tab mode-tab-agent mode-tab-active' : 'mode-tab mode-tab-agent'}>
-              <span className="mode-tab-icon">⌘</span> Agent <span className="mode-tab-live">EXECUTE</span>
-            </button>
+          </div>
+          <nav className="nl-mode-dock" aria-label="Workspace mode">
+            <button type="button" onClick={() => { setGodmode(false); setAgent(false); setControlsOpen(false); }} aria-pressed={!godmode} className={!godmode ? 'nl-mode-btn active' : 'nl-mode-btn'}><span>✳</span> Chat</button>
+            <button type="button" onClick={() => { if (!getModel(model).tools) setModel(DEFAULT_MODEL_ID); setAgent(true); setGodmode(true); setControlsOpen(false); }} aria-pressed={godmode} className={godmode ? 'nl-mode-btn active agent' : 'nl-mode-btn'}><span>⌘</span> Agent</button>
+            <button type="button" onClick={() => setToolsOpen(true)} className="nl-mode-btn nl-build-btn"><span>⌘</span> Build</button>
           </nav>
-          <div className="ml-auto flex items-center gap-1.5">
-            <span className={`hidden items-center gap-2 px-2 text-[10px] font-medium tracking-wide sm:flex ${loading ? 'text-amber-300' : 'text-zinc-500'}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'animate-pulse bg-amber-400' : 'bg-emerald-400'}`} />
-              {loading ? (godmode ? 'AGENT RUNNING' : 'THINKING') : 'READY'}
-            </span>
-            <div className="relative">
-              <button type="button" onClick={() => setControlsOpen((v) => !v)} aria-expanded={controlsOpen} aria-label="Workspace settings" title="Model and workspace settings" className={`topbar-icon ${controlsOpen ? 'topbar-icon-active' : ''}`}>
-                <WrenchIcon width={16} height={16} />
-              </button>
-              {controlsOpen && <div className="topbar-controls-panel">
-                <p className="topbar-controls-label">INTELLIGENCE SETTINGS</p>
-                <ModelPicker value={model} onChange={setModel} disabled={loading} tier={tier} />
-                <PersonaButton value={persona} onChange={changePersona} disabled={loading} />
-                <div className="topbar-controls-meta">Current engine · {current.name}</div>
-              </div>}
-            </div>
-            <button onClick={openUpdates} aria-label="Updates" title="Nameless Labs updates" className="topbar-icon relative">♢{updatesUnread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-orange-500 px-1 text-[9px] font-bold text-white">{updatesUnread > 9 ? '9+' : updatesUnread}</span>}</button>
-            <button onClick={() => setToolsOpen(true)} aria-label="Explore tools" title="Explore all AI capabilities" className="topbar-explore">✳ <span>Explore</span></button>
-            <button onClick={() => setDevicesOpen(true)} aria-label="Devices" title="Connected device tools" className="topbar-icon"><LaptopIcon width={16} height={16} /></button>
-            <AlarmsButton />
-            <ThemeButton />
-            {messages.length > 0 && <button onClick={exportChat} aria-label="Export chat as Markdown" title="Export this conversation" className="topbar-icon"><DownloadIcon /></button>}
-            <button onClick={newChat} aria-label="New chat" title="New conversation" className="topbar-new"><PlusIcon /></button>
+          <div className="nl-commandbar-right">
+            <div className={loading ? 'nl-status busy' : 'nl-status'}><i /> <span>{loading ? (godmode ? 'RUNNING' : 'THINKING') : 'READY'}</span></div>
+            <button onClick={openUpdates} aria-label="Updates" title="Product updates" className="nl-icon-btn relative">◈{updatesUnread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-orange-500 px-1 text-[9px] font-bold text-white">{updatesUnread > 9 ? '9+' : updatesUnread}</span>}</button>
+            <button onClick={() => setDevicesOpen(true)} aria-label="Devices" title="Developer devices" className="nl-icon-btn hidden sm:grid"><LaptopIcon width={16} height={16} /></button>
+            <button onClick={() => setSettingsOpen(true)} aria-label="Settings" title="Workspace settings" className="nl-settings-btn"><span>⚙</span><b className="hidden sm:block">Settings</b></button>
+            {messages.length > 0 && <button onClick={exportChat} aria-label="Export chat as Markdown" title="Export conversation" className="nl-icon-btn hidden sm:grid"><DownloadIcon /></button>}
+            <button onClick={newChat} aria-label="New chat" title="New conversation" className="nl-new-btn"><PlusIcon /><span className="hidden sm:block">New</span></button>
           </div>
         </header>
 
