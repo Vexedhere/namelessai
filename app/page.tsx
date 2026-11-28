@@ -1048,6 +1048,7 @@ export default function ChatPage() {
                 <MessageView
                   key={m.id}
                   message={m}
+                  assistantName={aiName}
                   streaming={loading && i === lastIndex && m.role === 'assistant'}
                   canRegenerate={!loading && i === lastIndex && m.role === 'assistant'}
                   onRegenerate={regenerate}
