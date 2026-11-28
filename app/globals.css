@@ -396,3 +396,80 @@ html,body{transition:background-color .35s ease,color .35s ease}
 @media(max-width:640px){.nl-commandbar{height:62px;padding:0 10px;gap:5px}.nl-commandbar-left{gap:5px}.nl-assistant-chip{padding:5px}.nl-assistant-copy b{max-width:88px;font-size:10px}.nl-assistant-glyph{width:29px;height:29px}.nl-mode-dock{gap:1px;padding:3px}.nl-mode-btn{gap:4px;padding:7px 8px;font-size:10px}.nl-build-btn{display:none}.nl-commandbar-right{gap:2px}.nl-status{display:none}.nl-settings-btn{width:35px;height:35px;padding:0}.nl-new-btn{width:35px;height:35px;padding:0}.nl-settings-overlay{padding:8px}.nl-settings-window{max-height:96dvh;border-radius:19px}.nl-settings-head{padding:19px 18px 15px}.nl-settings-scroll{padding:5px 18px 12px}.nl-settings-row{gap:9px;align-items:flex-start}.nl-settings-row>div:first-child{max-width:48%}.nl-segment button{padding:6px 7px;font-size:8px}.nl-settings-foot{padding:12px 18px}}
 
 .nl-app-shell[data-dev-mode="off"] .nl-build-btn{display:none!important}
+
+
+/* Mobile-first repair for compact phones and narrow split-screen layouts */
+@media (max-width: 640px) {
+  .nl-commandbar{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"left right" "modes modes";
+    align-content:center;
+    align-items:center;
+    gap:7px 8px;
+    height:auto!important;
+    min-height:100px;
+    padding:8px 10px 9px!important;
+    padding-top:max(8px,env(safe-area-inset-top))!important;
+  }
+  .nl-commandbar-left{grid-area:left;min-width:0;gap:5px}
+  .nl-commandbar-right{grid-area:right;margin-left:0;min-width:0;gap:3px}
+  .nl-mode-dock{grid-area:modes;justify-self:center;width:min(100%,340px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nl-mode-btn{justify-content:center;min-height:34px;padding:7px 12px;font-size:11px}
+  .nl-brand{display:none}
+  .nl-bar-divider{display:none}
+  .nl-assistant-chip{min-width:0;max-width:calc(100vw - 225px);padding:4px 8px 4px 5px;gap:6px}
+  .nl-assistant-copy{min-width:0}
+  .nl-assistant-copy b{max-width:clamp(62px,23vw,112px);font-size:11px}
+  .nl-assistant-copy small{display:none}
+  .nl-assistant-glyph{width:29px;height:29px;flex:none}
+  .nl-chip-edit{display:none}
+  .nl-commandbar-right .nl-icon-btn{width:33px;height:35px}
+  .nl-settings-btn,.nl-new-btn{width:35px;height:35px;min-width:35px;padding:0}
+  .nl-settings-btn>span{font-size:17px}
+  .nl-settings-btn b,.nl-new-btn span{display:none!important}
+  .nl-status{display:none}
+  .workspace-main{min-width:0;width:100%;max-width:100%;height:100dvh;overflow:hidden}
+  .workspace-main>.scroll-thin{min-height:0;overscroll-behavior:contain}
+  .workspace-composer{width:100%;max-width:100%!important;padding:7px 9px calc(8px + env(safe-area-inset-bottom))!important}
+  .workspace-composer-box{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px!important;padding:8px 9px!important;border-radius:23px!important}
+  .workspace-composer-box textarea{order:1;flex:1 1 100%;width:100%;min-width:0;min-height:42px!important;max-height:34dvh!important;padding:7px 4px!important;font-size:15px!important;line-height:1.5!important}
+  .workspace-composer-box .composer-model-switch{order:2;flex:1 1 auto;min-width:0;max-width:calc(100% - 102px);display:flex;align-items:center;gap:5px;overflow:hidden}
+  .workspace-composer-box .composer-model-switch>*{max-width:100%;min-width:0}
+  .workspace-composer-box>button{order:3;width:38px!important;height:38px!important;flex:none;border-radius:13px!important}
+  .workspace-composer-box button{min-height:38px}
+  .composer-command-menu{left:0;bottom:calc(100% + 9px);width:min(100%,calc(100vw - 24px));max-height:55dvh;overflow:auto}
+  .composer-drop-hint{font-size:11px}
+  .workspace-composer .mb-2{max-height:90px;overflow:auto}
+  .nl-settings-overlay{align-items:end;padding:0!important}
+  .nl-settings-window{width:100%;max-height:94dvh;border-radius:22px 22px 0 0!important;padding-bottom:env(safe-area-inset-bottom)}
+  .nl-settings-head h2{font-size:22px}
+  .nl-settings-row{min-height:58px}
+  .nl-settings-row>div:first-child{max-width:42%;min-width:0}
+  .nl-settings-row>div:first-child small{line-height:1.35}
+  .nl-settings-control{max-width:56%;min-width:0}
+  .nl-settings-control>*{max-width:100%}
+  .nl-segment{max-width:58vw;flex-wrap:wrap;justify-content:flex-end}
+  .nl-segment button{font-size:9px;padding:6px 8px}
+  .agent-run-strip{flex-wrap:wrap;gap:6px 9px;padding:9px 12px;font-size:10px}
+  .agent-run-strip button{margin-left:auto}
+  .workspace-main pre{max-width:100%;overflow-x:auto}
+  .workspace-main table{display:block;max-width:100%;overflow-x:auto}
+  .workspace-main img,.workspace-main video{max-width:100%;height:auto}
+}
+@media (max-width:380px) {
+  .nl-commandbar{grid-template-columns:minmax(0,1fr) auto;gap:6px 5px;padding-inline:7px!important}
+  .nl-assistant-chip{max-width:calc(100vw - 205px)}
+  .nl-assistant-copy b{max-width:64px}
+  .nl-commandbar-right{gap:1px}
+  .nl-commandbar-right .nl-icon-btn{width:30px}
+  .nl-settings-btn,.nl-new-btn{width:32px;min-width:32px}
+  .nl-mode-dock{width:100%}
+  .nl-settings-row{gap:6px}
+  .nl-settings-row>div:first-child{max-width:38%}
+}
+@media (max-height:560px) and (max-width:900px) {
+  .nl-commandbar{min-height:76px;gap:4px;padding-block:5px!important}
+  .nl-mode-btn{min-height:29px;padding-block:4px}
+  .nl-settings-window{max-height:98dvh}
+}
