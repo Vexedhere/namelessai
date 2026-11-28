@@ -37,11 +37,16 @@ export function Composer({
   }, [value]);
 
   const submit = () => {
-    const text = value.trim();
+    let text = value.trim();
     if ((!text && files.length === 0) || loading) return;
+    const command = commands.find((item) => text.startsWith(item.command));
+    if (command) text = command.prefix + text.slice(command.command.length).trim();
+    if (enhanced && text) text = `Please handle this request by identifying the desired outcome, stating assumptions, and delivering an accurate, structured result with practical next steps.\\n\\nREQUEST:\\n${text}`;
     onSend(text || 'Please read and analyse the attached file(s).', files);
     setValue('');
     setFiles([]);
+    setEnhanced(false);
+    setCommandsOpen(false);
     if (fileRef.current) fileRef.current.value = '';
   };
 
