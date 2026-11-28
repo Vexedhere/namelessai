@@ -1129,6 +1129,9 @@ export default function ChatPage() {
           voiceActive={voice.active}
           onHandsFree={voice.supported ? toggleHandsFree : undefined}
           handsFree={voice.handsFree}
+          model={model}
+          onModelChange={setModel}
+          tier={tier}
         />
       </section>
     </div>
