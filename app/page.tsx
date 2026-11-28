@@ -328,7 +328,7 @@ export default function ChatPage() {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [userId, profile?.name]);
+  }, [userId, profile?.name, loading, godmode, activeId]);
 
   useEffect(() => {
     let alive = true;
