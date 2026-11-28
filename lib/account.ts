@@ -9,6 +9,7 @@ export type AccountSettings = {
   model: string;
   voiceLang: string;
   agent: boolean;
+  preferences?: Record<string, unknown>;
 };
 
 export type AccountRow = { settings: Partial<AccountSettings> | null; data: Record<string, unknown> };
@@ -33,6 +34,7 @@ export async function fetchAccount(sb: SupabaseClient, userId: string): Promise<
       ...(data.model ? { model: String(data.model) } : {}),
       ...(data.voice_lang ? { voiceLang: String(data.voice_lang) } : {}),
       ...(typeof data.agent === 'boolean' ? { agent: data.agent } : {}),
+      ...(data.preferences && typeof data.preferences === 'object' && !Array.isArray(data.preferences) ? { preferences: data.preferences as Record<string, unknown> } : {}),
     },
     data: data.data && typeof data.data === 'object' && !Array.isArray(data.data) ? (data.data as Record<string, unknown>) : {},
   };
@@ -49,6 +51,7 @@ export async function pushSettings(sb: SupabaseClient, userId: string, s: Accoun
       model: s.model,
       voice_lang: s.voiceLang,
       agent: s.agent,
+      preferences: s.preferences ?? {},
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },
