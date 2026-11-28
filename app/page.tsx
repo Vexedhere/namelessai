@@ -342,6 +342,7 @@ export default function ChatPage() {
   const nameRef = useRef<string | undefined>(undefined);
   nameRef.current = profile?.name;
   const [aiName, setAiName] = useState<string | null>(null);
+  const [aiAvatar, setAiAvatar] = useState('sparkles');
   const aiNameRef = useRef<string | null>(null);
   aiNameRef.current = aiName;
   const [nameOpen, setNameOpen] = useState(false);
@@ -368,6 +369,7 @@ export default function ChatPage() {
       setChats([]);
       setActiveId(null);
       setAiName(null);
+      setAiAvatar('sparkles');
       resetStore();
       applyTheme(DEFAULT_THEME);
     }
@@ -386,6 +388,7 @@ export default function ChatPage() {
       let n: string | null = null;
       try {
         n = cleanAiName(sessionStorage.getItem(AI_NAME_KEY)) || null;
+        setAiAvatar(sessionStorage.getItem('nameless-labs-ai:ai-avatar') || 'sparkles');
       } catch {
         /* ignore */
       }
@@ -407,6 +410,7 @@ export default function ChatPage() {
           if (st.model && MODELS.some((m) => m.id === st.model)) setModel(st.model);
           if (st.voiceLang) setVoiceLang(st.voiceLang);
         }
+        if (st?.aiAvatar) setAiAvatar(st.aiAvatar);
         const name = st?.aiName || aiNameRef.current; // a name picked as a guest in this tab carries over
         setAiName(name);
         setNameOpen(!name);
@@ -440,11 +444,13 @@ export default function ChatPage() {
     };
   }, [authReady, userId]);
 
+  useEffect(() => { document.title = (aiName || 'Nameless AI') + ' · Nameless Labs'; }, [aiName]);
+
   // save settings to the account whenever they change
   useEffect(() => {
     const sb = getSupabase();
     if (!accountReady || !userId || !sb) return;
-    const settings = { aiName, theme: themeId, persona, model, voiceLang, agent };
+    const settings = { aiName, aiAvatar, theme: themeId, persona, model, voiceLang, agent };
     const json = JSON.stringify(settings);
     if (json === lastSettingsRef.current) return;
     const t = setTimeout(async () => {
@@ -456,16 +462,18 @@ export default function ChatPage() {
       }
     }, 800);
     return () => clearTimeout(t);
-  }, [accountReady, userId, aiName, themeId, persona, model, voiceLang, agent]);
+  }, [accountReady, userId, aiName, aiAvatar, themeId, persona, model, voiceLang, agent]);
 
-  const saveAiName = useCallback((raw: string) => {
+  const saveAiName = useCallback((raw: string, avatar = 'sparkles') => {
     const n = cleanAiName(raw);
     if (!n) return;
     setAiName(n);
+    setAiAvatar(avatar);
     setNameOpen(false);
     if (!ownerRef.current) {
       try {
         sessionStorage.setItem(AI_NAME_KEY, n);
+        sessionStorage.setItem('nameless-labs-ai:ai-avatar', avatar);
       } catch {
         /* ignore */
       }
@@ -959,6 +967,7 @@ export default function ChatPage() {
       <NameAiModal
         open={nameOpen && authReady && !authOpen && !voice.active}
         initial={aiName}
+        initialAvatar={aiAvatar}
         signedIn={!!user}
         onSave={saveAiName}
         onClose={aiName ? () => setNameOpen(false) : undefined}
@@ -970,6 +979,7 @@ export default function ChatPage() {
           <button onClick={newChat} className="topbar-brand hidden items-center gap-2.5 md:flex" aria-label="New NamelessAI chat">
             <span className="topbar-brand-mark">N</span><span>NAMELESS<span>LABS</span></span>
           </button>
+          <button type="button" onClick={() => setNameOpen(true)} className="topbar-ai-identity" title="Personalize your AI assistant"><span className="topbar-ai-avatar">{({sparkles:'✦',bot:'◈',brain:'✺',rocket:'↗',cat:'◡',orbit:'◎',sun:'☼',moon:'☾',leaf:'❋',zap:'ϟ',flame:'♨',heart:'♡'} as Record<string,string>)[aiAvatar] || '✦'}</span><span className="hidden sm:block">{aiName || 'Nameless AI'}</span><span className="topbar-ai-edit">Edit</span></button>
           <nav className="mode-switch" aria-label="Workspace mode">
             <button type="button" onClick={() => { setGodmode(false); setAgent(false); setControlsOpen(false); }} aria-pressed={!godmode} className={!godmode ? 'mode-tab mode-tab-active' : 'mode-tab'}>
               <span className="mode-tab-icon">✳</span> AI
