@@ -20,7 +20,7 @@ export const cleanAiName = (v: unknown): string =>
 export async function fetchAccount(sb: SupabaseClient, userId: string): Promise<AccountRow> {
   const { data, error } = await sb
     .from('user_settings')
-    .select('ai_name,ai_avatar,theme,persona,model,voice_lang,agent,data')
+    .select('ai_name,ai_avatar,theme,persona,model,voice_lang,agent,preferences,data')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw error;
