@@ -60,7 +60,7 @@ export const MOOD_THEMES = [
 {id:'paper-daylight',name:'Paper Daylight',swatch:['#FAF9F6','#4338CA'],vars:{'--bg':'250 249 246','--brand-50':'24 24 27','--brand-100':'39 39 42','--brand-200':'63 63 70','--brand-300':'79 70 229','--brand-400':'67 56 202','--brand-500':'79 70 229','--brand-600':'55 48 163','--accent':'124 58 237','--surface':'255 255 255','--text':'24 24 27','--muted':'82 82 91','--line':'228 228 231'}},
 {id:'matcha-cream',name:'Matcha Cream',swatch:['#F3F6F1','#527A55'],vars:{'--bg':'243 246 241','--brand-50':'23 37 25','--brand-100':'36 58 39','--brand-200':'58 87 61','--brand-300':'82 122 85','--brand-400':'101 145 103','--brand-500':'82 122 85','--brand-600':'57 89 61','--accent':'112 139 94','--surface':'255 255 252','--text':'29 42 30','--muted':'82 98 83','--line':'216 226 214'}}
 ] as const;
-const MOOD_MAP = new Map(MOOD_THEMES.map((item) => [item.id,item]));
+const MOOD_MAP = new Map<string, (typeof MOOD_THEMES)[number]>(MOOD_THEMES.map((item) => [item.id,item]));
 
 // The five original theme ids keep working (saved settings, voice commands).
 const LEGACY: Record<string, string> = {
