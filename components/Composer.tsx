@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { HandsFreeIcon, MicIcon, SendIcon, StopIcon } from './Icons';
+import { ModelPicker } from './ModelPicker';
 
 export function Composer({
   loading,
@@ -12,6 +13,9 @@ export function Composer({
   voiceActive = false,
   onHandsFree,
   handsFree = false,
+  model,
+  onModelChange,
+  tier = 'FREE',
 }: {
   loading: boolean;
   placeholder: string;
@@ -23,6 +27,9 @@ export function Composer({
   /** toggle always-listening mode (hidden when omitted) */
   onHandsFree?: () => void;
   handsFree?: boolean;
+  model?: string;
+  onModelChange?: (id: string) => void;
+  tier?: 'FREE' | 'BASE' | 'PLUS' | 'PRO';
 }) {
   const [value, setValue] = useState('');
   const [files, setFiles] = useState<File[]>([]);
@@ -67,6 +74,7 @@ export function Composer({
       {files.length > 0 && <div className="mb-2 flex flex-wrap gap-2">{files.map((file, i) => <span key={`${file.name}-${i}`} className="inline-flex max-w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-zinc-300"><span className="max-w-[220px] truncate">{file.name}</span><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setFiles((old) => old.filter((_, n) => n !== i))} className="text-zinc-500 hover:text-white">×</button></span>)}</div>}
       {commandsOpen && <div className="composer-command-menu" role="listbox" aria-label="Slash commands">{commands.map((item) => <button type="button" key={item.command} onClick={() => { setValue(`${item.command} `); setCommandsOpen(false); ref.current?.focus(); }}><b>{item.command}</b><span>{item.label}</span><small>{item.hint}</small></button>)}</div>}
       <div className="workspace-composer-box flex items-end gap-2 rounded-3xl border border-white/10 bg-[#0d1219]/80 p-2 pl-5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] backdrop-blur-xl transition">
+        {model && onModelChange && <div className="composer-model-switch"><ModelPicker value={model} onChange={onModelChange} disabled={loading} tier={tier} /></div>}
         <textarea
           ref={ref}
           rows={1}
