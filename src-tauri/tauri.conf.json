@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Nameless Labs AI",
+  "version": "1.0.0",
+  "identifier": "net.in.namlesslabs.ai",
+  "build": {
+    "frontendDist": "https://ai.namlesslabs.in.net"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Nameless Labs AI",
+        "width": 1280,
+        "height": 820,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"]
+  }
+}
