@@ -4,35 +4,41 @@ import { useEffect, useRef, useState } from 'react';
 import { cleanAiName } from '@/lib/account';
 
 const IDEAS = ['Nova', 'Jarvis', 'Echo', 'Atlas', 'Luna', 'Sage', 'Zen', 'Orion'];
+const AVATARS = ['sparkles','bot','brain','rocket','cat','orbit','sun','moon','leaf','zap','flame','heart'];
+const ICONS: Record<string,string> = {sparkles:'✦',bot:'◈',brain:'✺',rocket:'↗',cat:'◡',orbit:'◎',sun:'☼',moon:'☾',leaf:'❋',zap:'ϟ',flame:'♨',heart:'♡'};
 
 /** Shown when someone opens the site and their AI has no name yet (and again from "rename"). */
 export function NameAiModal({
   open,
   initial,
+  initialAvatar = 'sparkles',
   signedIn,
   onSave,
   onClose,
 }: {
   open: boolean;
   initial: string | null;
+  initialAvatar?: string;
   signedIn: boolean;
-  onSave: (name: string) => void;
+  onSave: (name: string, avatar: string) => void;
   /** Provided only when the dialog may be dismissed (renaming). First-time naming can be skipped via "Use default". */
   onClose?: () => void;
 }) {
   const [value, setValue] = useState('');
+  const [avatar, setAvatar] = useState(initialAvatar);
   const ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setValue(initial ?? '');
+      setAvatar(initialAvatar);
       setTimeout(() => ref.current?.focus(), 50);
     }
-  }, [open, initial]);
+  }, [open, initial, initialAvatar]);
 
   if (!open) return null;
   const name = cleanAiName(value);
-  const submit = () => name && onSave(name);
+  const submit = () => name && onSave(name, avatar);
 
   return (
     <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="name-ai-title">
@@ -66,6 +72,7 @@ export function NameAiModal({
             ))}
           </div>
 
+          <div className="mt-5"><p className="mb-2 text-xs font-semibold text-zinc-400">Choose your assistant avatar</p><div className="grid grid-cols-6 gap-2">{AVATARS.map((item) => <button type="button" key={item} onClick={() => setAvatar(item)} aria-pressed={avatar === item} className={'grid h-10 place-items-center rounded-xl border text-lg transition ' + (avatar === item ? 'border-cyan-300/70 bg-cyan-300/15 text-cyan-100' : 'border-white/10 bg-white/[.03] text-zinc-400 hover:bg-white/[.08]')}>{ICONS[item]}</button>)}</div></div>
           <button
             onClick={submit}
             disabled={!name}
