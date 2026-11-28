@@ -771,3 +771,51 @@ aside[class*="w-"] button[class*="bg-gradient-to-br"] { background:#c8d9cc !impo
  .command-dashboard-footer { flex-direction:column; font-size:8px; }
  aside[class*="w-"] { width:min(88vw,300px) !important; }
 }
+
+
+
+/* NAMeless LABS — unified obsidian design system */
+:root{--nl-bg:#080a0a;--nl-panel:#101414;--nl-panel-2:#151b19;--nl-line:rgba(226,239,226,.10);--nl-ink:#f1f4ed;--nl-muted:#929b91;--nl-accent:#c5f36b;--nl-accent-2:#9fce4d}
+html,body{background:#080a0a;color:#f1f4ed}
+::selection{background:rgba(197,243,107,.28);color:#fff}
+button,a,input,textarea,select{ -webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #c5f36b;outline-offset:3px}
+.workspace-atmosphere{background:radial-gradient(ellipse at 52% -20%,rgba(151,190,86,.13),transparent 48%),#080a0a!important;color:#f1f4ed}
+.workspace-grid{opacity:.17;background-size:72px 72px}
+.workspace-glow-a{background:rgba(197,243,107,.12)}
+.workspace-glow-b{background:rgba(103,190,156,.08)}
+.workspace-topbar,.clean-topbar{background:rgba(8,10,10,.82)!important;border-bottom:1px solid rgba(226,239,226,.09);backdrop-filter:blur(22px)}
+.workspace-composer{background:linear-gradient(180deg,transparent,rgba(8,10,10,.97) 30%)!important}
+.workspace-composer-box{background:rgba(19,25,22,.96)!important;border:1px solid rgba(220,239,211,.15)!important;border-radius:20px!important;box-shadow:0 24px 80px rgba(0,0,0,.38)!important}
+.workspace-composer-box:focus-within{border-color:rgba(197,243,107,.55)!important;box-shadow:0 0 0 4px rgba(197,243,107,.07),0 24px 80px rgba(0,0,0,.4)!important}
+.topbar-brand-mark{background:#c5f36b!important;color:#11170d!important;border-radius:9px;font-style:normal!important;font-family:var(--font-sans)!important;font-weight:900!important}
+.mode-switch{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.10);border-radius:14px}
+.mode-tab{border-radius:10px}.mode-tab-active{background:#e9f2df!important;color:#182012!important}.mode-tab-agent.mode-tab-active{background:#c5f36b!important;color:#182012!important}
+.topbar-icon,.topbar-new{border-radius:11px}.topbar-new{background:#c5f36b!important;color:#11170d!important}
+.agent-run-strip{background:rgba(197,243,107,.07);border-color:rgba(197,243,107,.16)}
+.agent-run-strip b{color:#c5f36b}.agent-run-pulse{background:#c5f36b;box-shadow:0 0 14px #c5f36b}
+.home-stage{background:#0b0f0d!important;color:#eef3e9!important}
+.home-stage:before{opacity:.08}
+.home-kicker{color:#a2ad9e}.home-kicker-mark{background:#c5f36b;color:#10160d;border-radius:7px;font-family:var(--font-sans)}
+.home-kicker i,.home-footer i{color:#c5f36b}
+.home-hero{border-color:rgba(232,241,224,.13)}
+.home-overline{color:#c5f36b}.home-overline>span{background:#c5f36b}
+.home-hero h2,.home-section-head h3{color:#f0f4e9}
+.home-hero h2 em,.home-section-head h3 span{color:#c5f36b}
+.home-intro,.home-section-note{color:#a1aa9d}
+.home-model-orb{border-color:rgba(232,241,224,.2);color:#c5f36b}.home-model-line b{color:#eff5e8}
+.home-hero-art{background:linear-gradient(145deg,#243322,#111b14)!important;border:1px solid rgba(197,243,107,.2);border-radius:22px}
+.home-art-core{background:#c5f36b;color:#15200e}
+.home-art-ring{border-color:rgba(197,243,107,.45)}
+.home-action-card{background:rgba(255,255,255,.035);border:1px solid rgba(226,239,226,.12);border-radius:15px;color:#eff4e9}
+.home-action-card:hover{background:rgba(197,243,107,.07);border-color:rgba(197,243,107,.42);box-shadow:0 18px 42px rgba(0,0,0,.25)}
+.home-action-mark{border-color:rgba(197,243,107,.22);color:#c5f36b;border-radius:9px}
+.home-action-title{color:#eff4e9}.home-action-detail{color:#9ba69a}.home-action-label{color:#c5f36b}
+.home-action-featured{background:linear-gradient(145deg,#c5f36b,#a8d85d)!important;border-color:#c5f36b!important}
+.home-action-featured .home-action-title,.home-action-featured .home-action-number,.home-action-featured .home-action-detail,.home-action-featured .home-action-label{color:#17200f!important}
+.home-action-featured .home-action-mark{color:#17200f;border-color:rgba(23,32,15,.25)}
+.home-action-featured:hover{background:#d3ff83!important}
+.home-voice-card{background:#141c15}
+.home-footer{border-color:rgba(232,241,224,.13);color:#758174}
+.topbar-controls-panel{background:#111815;border-color:rgba(226,239,226,.13);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.55)}
+@media(max-width:760px){.home-hero-art{border-radius:16px}.home-action-card{border-radius:13px}}
