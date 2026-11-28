@@ -975,7 +975,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div data-density={preferences.density} data-text-size={preferences.textSize} data-content-width={preferences.contentWidth} data-code-wrap={preferences.codeWrap ? "on" : "off"} data-motion={preferences.animations ? "on" : "off"} className="nl-app-shell relative flex h-[100dvh] overflow-hidden bg-canvas text-zinc-100 transition-colors duration-500">
+    <div data-density={preferences.density} data-text-size={preferences.textSize} data-content-width={preferences.contentWidth} data-code-wrap={preferences.codeWrap ? "on" : "off"} data-motion={preferences.animations ? "on" : "off"} data-dev-mode={preferences.developerMode ? "on" : "off"} className="nl-app-shell relative flex h-[100dvh] overflow-hidden bg-canvas text-zinc-100 transition-colors duration-500">
       <AlarmRinger />
       {/* Quiet, high-contrast workspace atmosphere */}
       <div aria-hidden className="workspace-atmosphere pointer-events-none absolute inset-0">
