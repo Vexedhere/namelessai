@@ -425,7 +425,7 @@ export default function ChatPage() {
       setSync('off');
       let n: string | null = null;
       try {
-        n = cleanAiName(sessionStorage.getItem(AI_NAME_KEY)) || null;
+        n = cleanAiName(sessionStorage.getItem(AI_NAME_KEY)) || null;\n        const savedPrefs = sessionStorage.getItem('nameless-labs-ai:preferences');\n        if (savedPrefs) setPreferences((cur) => ({ ...cur, ...JSON.parse(savedPrefs) }));
         setAiAvatar(sessionStorage.getItem('nameless-labs-ai:ai-avatar') || 'sparkles');
       } catch {
         /* ignore */
@@ -517,6 +517,11 @@ export default function ChatPage() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (userId || !hydrated) return;
+    try { sessionStorage.setItem('nameless-labs-ai:preferences', JSON.stringify(preferences)); } catch { /* ignore */ }
+  }, [preferences, userId, hydrated]);
 
   // push new/changed chats to the account (never while a reply is streaming)
   useEffect(() => {
@@ -1196,6 +1201,7 @@ export default function ChatPage() {
           tier={tier}
           poolRemaining={modelPool?.remaining}
           poolLimit={modelPool?.limit}
+          enterToSend={preferences.enterToSend}
         />
       </section>
     </div>
