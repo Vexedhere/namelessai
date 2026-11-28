@@ -28,6 +28,7 @@ export function Composer({
   const [files, setFiles] = useState<File[]>([]);
   const [commandsOpen, setCommandsOpen] = useState(false);
   const [enhanced, setEnhanced] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const commands = [
     { command: '/research', label: 'Deep research', hint: 'Investigate a topic and compare sources', prefix: 'Research this thoroughly, compare reliable sources, cite evidence, and distinguish facts from uncertainty.\n\n' },
     { command: '/plan', label: 'Create a plan', hint: 'Turn the request into actionable steps', prefix: 'Create a practical step-by-step plan with milestones, dependencies, and a definition of done.\n\n' },
@@ -60,7 +61,8 @@ export function Composer({
   };
 
   return (
-    <div className="workspace-composer mx-auto w-full max-w-[920px] px-4 pb-5 pt-2 sm:px-6">
+    <div className={`workspace-composer mx-auto w-full max-w-[920px] px-4 pb-5 pt-2 sm:px-6 ${dragging ? 'composer-dragging' : ''}`} onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false); }} onDrop={(e) => { e.preventDefault(); setDragging(false); setFiles((old) => [...old, ...Array.from(e.dataTransfer.files)].slice(0, 5)); }}>
+      {dragging && <div className="composer-drop-hint">Drop files to attach them</div>}
       <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.xlsx,.xls,.pptx,.zip,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,.txt,.md,.csv,.json,.xml,.html,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.go,.rs,.sql,.yaml,.yml,.toml,.log,.sh,.env,.ini,.conf,.graphql,.gql,.vue,.svelte" className="hidden" aria-label="Attach files" onChange={(e) => setFiles((old) => [...old, ...Array.from(e.target.files ?? [])].slice(0, 5))} />
       {files.length > 0 && <div className="mb-2 flex flex-wrap gap-2">{files.map((file, i) => <span key={`${file.name}-${i}`} className="inline-flex max-w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-zinc-300"><span className="max-w-[220px] truncate">{file.name}</span><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setFiles((old) => old.filter((_, n) => n !== i))} className="text-zinc-500 hover:text-white">×</button></span>)}</div>}
       {commandsOpen && <div className="composer-command-menu" role="listbox" aria-label="Slash commands">{commands.map((item) => <button type="button" key={item.command} onClick={() => { setValue(`${item.command} `); setCommandsOpen(false); ref.current?.focus(); }}><b>{item.command}</b><span>{item.label}</span><small>{item.hint}</small></button>)}</div>}
