@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { THEMES, MOOD_THEMES, THEME_COUNT, applyTheme, getCurrentTheme, getTheme } from '@/lib/theme';
+import { THEMES, MOOD_THEMES, applyTheme, getCurrentTheme, getTheme } from '@/lib/theme';
 export function ThemeButton() {
  const [open,setOpen]=useState(false),[current,setCurrent]=useState('obsidian'),[query,setQuery]=useState(''),[ambient,setAmbient]=useState(true);
  const ref=useRef<HTMLDivElement>(null);
