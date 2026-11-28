@@ -212,11 +212,48 @@ export default function ChatPage() {
   useEffect(() => {
     const sb = getSupabase();
     if (!sb || !userId) { setTier('FREE'); return; }
-    sb.from('profiles').select('tier').eq('id', userId).maybeSingle().then(({ data }) => {
-      const value = data?.tier;
+    let alive = true;
+    const refresh = async () => {
+      const { data } = await sb.from('profiles').select('tier').eq('id', userId).maybeSingle();
+      if (!alive) return;
+      const value = String(data?.tier || 'FREE').toUpperCase();
       setTier(value === 'PRO' || value === 'PLUS' || value === 'BASE' ? value : 'FREE');
-    });
+    };
+    void refresh();
+    const channel = sb.channel('tier-' + userId).on('postgres_changes', {event:'UPDATE',schema:'public',table:'profiles',filter:'id=eq.'+userId}, (event) => {
+      const value = String((event.new as {tier?:string}).tier || 'FREE').toUpperCase();
+      setTier(value === 'PRO' || value === 'PLUS' || value === 'BASE' ? value : 'FREE');
+    }).subscribe();
+    const onFocus = () => void refresh();
+    window.addEventListener('focus', onFocus);
+    return () => { alive = false; window.removeEventListener('focus', onFocus); void sb.removeChannel(channel); };
   }, [userId]);
+
+  type Announcement = {id:string;title:string;body:string;category:string;created_at:string};
+  const [updatesOpen,setUpdatesOpen] = useState(false);
+  const [announcements,setAnnouncements] = useState<Announcement[]>([]);
+  const [updatesUnread,setUpdatesUnread] = useState(0);
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) return;
+    let alive = true;
+    const load = async () => {
+      const {data,error} = await sb.from('announcements').select('id,title,body,category,created_at').eq('published',true).order('created_at',{ascending:false}).limit(30);
+      if (!alive || error) return;
+      const items = (data || []) as Announcement[];
+      setAnnouncements(items);
+      let seen = ''; try { seen = localStorage.getItem('nl_updates_seen') || ''; } catch {}
+      setUpdatesUnread(items.filter(x => x.created_at > seen).length);
+    };
+    void load();
+    const channel = sb.channel('announcements-feed').on('postgres_changes',{event:'*',schema:'public',table:'announcements'},() => void load()).subscribe();
+    return () => { alive = false; void sb.removeChannel(channel); };
+  }, []);
+  const openUpdates = () => {
+    setUpdatesOpen(true);
+    try { localStorage.setItem('nl_updates_seen', announcements[0]?.created_at || new Date().toISOString()); } catch {}
+    setUpdatesUnread(0);
+  };
 
   const abortRef = useRef<AbortController | null>(null);
   const visitorSessionRef = useRef<string | null>(null);
@@ -909,6 +946,13 @@ export default function ChatPage() {
         onSignIn={() => setAuthOpen(true)}
         onSignOut={signOut}
       />
+      {updatesOpen && <div className="fixed inset-0 z-[90] flex justify-end bg-black/60 backdrop-blur-sm" onMouseDown={(e) => {if(e.target===e.currentTarget)setUpdatesOpen(false);}}>
+        <section role="dialog" aria-modal="true" aria-label="Nameless Labs updates" className="h-full w-full max-w-md overflow-y-auto border-l border-white/10 bg-[#101310] p-6 shadow-2xl">
+          <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold tracking-[.2em] text-orange-300">NAMELESS LABS / BULLETIN</p><h2 className="mt-2 text-2xl font-semibold text-stone-100">The latest.</h2><p className="mt-1 text-xs text-stone-500">Product news, features and service notices.</p></div><button onClick={()=>setUpdatesOpen(false)} className="rounded-lg border border-white/10 px-3 py-2 text-stone-400">✕</button></div>
+          <div className="mt-7 space-y-3">{announcements.length ? announcements.map(item=><article key={item.id} className="rounded-xl border border-white/10 bg-white/[.025] p-4"><div className="flex justify-between gap-3"><span className="text-[9px] font-bold tracking-[.16em] text-orange-300">{item.category}</span><time className="text-[10px] text-stone-500">{new Date(item.created_at).toLocaleDateString()}</time></div><h3 className="mt-3 text-base font-semibold text-stone-100">{item.title}</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-stone-400">{item.body}</p></article>) : <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-sm text-stone-500">No announcements yet. Check back soon.</div>}</div>
+          <p className="mt-8 border-t border-white/10 pt-4 text-[10px] tracking-widest text-stone-600">MADE WITH INTENTION · NAMELESS LABS</p>
+        </section>
+      </div>}
       <DevicesPanel open={devicesOpen} onClose={() => setDevicesOpen(false)} />
       {toolsOpen && <ToolsHub onClose={() => setToolsOpen(false)} onRun={(prompt) => { setToolsOpen(false); send(prompt); }} />}
       <AuthModal open={authOpen && !user} onClose={() => setAuthOpen(false)} />
@@ -950,6 +994,7 @@ export default function ChatPage() {
                 <div className="topbar-controls-meta">Current engine · {current.name}</div>
               </div>}
             </div>
+            <button onClick={openUpdates} aria-label="Updates" title="Nameless Labs updates" className="topbar-icon relative">♢{updatesUnread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-orange-500 px-1 text-[9px] font-bold text-white">{updatesUnread > 9 ? '9+' : updatesUnread}</span>}</button>
             <button onClick={() => setToolsOpen(true)} aria-label="Explore tools" title="Explore all AI capabilities" className="topbar-explore">✳ <span>Explore</span></button>
             <button onClick={() => setDevicesOpen(true)} aria-label="Devices" title="Connected device tools" className="topbar-icon"><LaptopIcon width={16} height={16} /></button>
             <AlarmsButton />
