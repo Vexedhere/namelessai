@@ -14,6 +14,7 @@ function MessageViewImpl({
   canRegenerate,
   onRegenerate,
   continuation = false,
+  assistantName,
 }: {
   message: Message;
   streaming: boolean;
@@ -21,6 +22,7 @@ function MessageViewImpl({
   onRegenerate: () => void;
   /** previous message was also the assistant's (tool step): hide the avatar + name */
   continuation?: boolean;
+  assistantName?: string | null;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -52,7 +54,7 @@ function MessageViewImpl({
     <div className={`animate-rise flex gap-3.5 ${continuation ? '-mt-5' : ''}`}>
       <div className="w-7 shrink-0 pt-1">{!continuation && <ModelOrb model={model} size={28} />}</div>
       <div className="min-w-0 flex-1">
-        {!continuation && <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{model.name}</p>}
+        {!continuation && <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{assistantName || model.name}</p>}
 
         {waiting && (
           <div className="flex items-center gap-1.5 py-3" aria-label="Thinking">
