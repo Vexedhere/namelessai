@@ -29,13 +29,13 @@ export async function getServerUser(req: Request): Promise<ServerUser | null> {
 }
 
 /** Looks up the subscription tier (needs SUPABASE_SERVICE_ROLE_KEY). */
-export async function getUserTier(userId: string): Promise<'FREE' | 'PLUS' | 'PRO'> {
+export async function getUserTier(userId: string): Promise<'FREE' | 'BASE' | 'PLUS' | 'PRO'> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) return 'FREE';
   try {
     const admin = createClient(SUPABASE_URL, serviceKey);
     const { data } = await admin.from('profiles').select('tier').eq('id', userId).maybeSingle();
-    return data?.tier === 'PRO' || data?.tier === 'PLUS' ? data.tier : 'FREE';
+    return data?.tier === 'PRO' || data?.tier === 'PLUS' || data?.tier === 'BASE' ? data.tier : 'FREE';
   } catch {
     return 'FREE';
   }
