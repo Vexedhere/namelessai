@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { DEFAULT_MODEL_ID, MODEL_IDS } from '@/lib/models';
 import { TOOL_DEFS, agentSystemPrompt } from '@/lib/toolDefs';
 import { ndjson, sanitizeMessages, sseToEventStream } from '@/lib/chatProtocol';
-import { bearerToken, getServerUser, getUserTier } from '@/lib/serverAuth';
+import { bearerToken, getServerUser } from '@/lib/serverAuth';
 import { teamPrompt } from '@/lib/team';
 import { PERSONAS, PERSONA_IDS } from '@/lib/personas';
 import { APP_CODENAME, APP_VERSION_LABEL } from '@/lib/version';
@@ -82,7 +82,6 @@ function friendlyUpstreamError(status: number, raw: string): string {
 
 export async function POST(req: NextRequest) {
   const authUser = await getServerUser(req);
-  const userTier = authUser ? await getUserTier(authUser.id) : 'FREE';
 
   let body: unknown;
   try {
@@ -144,38 +143,28 @@ export async function POST(req: NextRequest) {
   if (visitorError) return jsonError('Could not verify this browser session with moderation.', 503);
   if (visitorCheck?.allowed === false) return jsonError('This browser session has been kicked by Nameless Labs moderation.', 403);
 
-  // Vercel overwrites x-real-ip with the connecting client's address. Check
-  // the IP on the server too, so callers cannot bypass the browser-side guard.
+  // Delegate trusted IP and tier/quota checks to Supabase Edge Functions.
+  // This keeps the service-role secret out of Vercel and the browser.
   const clientIp = (req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0] || '').trim();
   if (clientIp) {
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceKey) return jsonError('IP moderation is not configured on the server.', 503);
-    const adminClient = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
+    const ipCheck = await fetch(supabaseUrl + '/functions/v1/ip-guard', {
+      method: 'POST',
+      headers: { apikey: anonKey, Authorization: 'Bearer ' + (accessToken || anonKey), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: visitorSessionId, client_ip: clientIp }),
+      signal: req.signal,
     });
-    const { data: ipRestricted, error: ipError } = await adminClient.rpc('nl_ip_is_restricted', { p_ip: clientIp });
-    if (ipError) return jsonError('Could not verify network moderation status.', 503);
-    if (ipRestricted === true) return jsonError('This network address is restricted by Nameless Labs moderation.', 403);
+    if (ipCheck.status === 403) return jsonError('This network address is restricted by Nameless Labs moderation.', 403);
+    if (!ipCheck.ok) return jsonError('Could not verify network moderation status.', 503);
   }
 
-  const requiredTier: 'FREE' | 'PLUS' | 'PRO' = modelId === 'quasar-apex' ? 'PRO' : modelId === 'aether-pro' ? 'PLUS' : 'FREE';
-  if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);
-  if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
-
-  const usageServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!usageServiceKey) return jsonError('Model usage pool is not configured on the server.', 503);
-  const usageClient = createClient(supabaseUrl, usageServiceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: modelPool, error: modelPoolError } = await usageClient.rpc('nl_consume_model_pool', {
-    p_user_id: authUser?.id ?? null,
-    p_session_id: visitorSessionId,
-    p_tier: userTier,
-    p_model_id: modelId,
+  const poolCheck = await fetch(supabaseUrl + '/functions/v1/model-pool', {
+    method: 'POST',
+    headers: { apikey: anonKey, Authorization: 'Bearer ' + (accessToken || anonKey), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'consume', session_id: visitorSessionId, model_id: modelId }),
+    signal: req.signal,
   });
-  if (modelPoolError) return jsonError('Could not verify your three-hour model usage pool.', 503);
-  if (modelPool?.allowed === false) {
-    const reset = modelPool.reset_at ? new Date(modelPool.reset_at).toLocaleTimeString() : 'soon';
-    return jsonError('You have used your ' + modelPool.limit + ' message pool for this three-hour window. It refreshes at ' + reset + '.', 429);
-  }
+  const poolData = await poolCheck.json().catch(() => ({}));
+  if (!poolCheck.ok) return jsonError(typeof poolData.error === 'string' ? poolData.error : 'Could not verify your three-hour model usage pool.', poolCheck.status);
 
   const useTools = rawTools === true;
   const godmode = rawGodmode === true;
