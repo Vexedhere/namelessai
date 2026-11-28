@@ -162,6 +162,21 @@ export async function POST(req: NextRequest) {
   if (requiredTier === 'PLUS' && userTier === 'FREE') return jsonError('A NamelessAI Plus subscription is required for this model. Upgrade at /tiers.', 403);
   if (requiredTier === 'PRO' && userTier !== 'PRO') return jsonError('A NamelessAI Pro subscription is required for this model. Upgrade at /tiers.', 403);
 
+  const usageServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!usageServiceKey) return jsonError('Model usage pool is not configured on the server.', 503);
+  const usageClient = createClient(supabaseUrl, usageServiceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data: modelPool, error: modelPoolError } = await usageClient.rpc('nl_consume_model_pool', {
+    p_user_id: authUser?.id ?? null,
+    p_session_id: visitorSessionId,
+    p_tier: userTier,
+    p_model_id: modelId,
+  });
+  if (modelPoolError) return jsonError('Could not verify your three-hour model usage pool.', 503);
+  if (modelPool?.allowed === false) {
+    const reset = modelPool.reset_at ? new Date(modelPool.reset_at).toLocaleTimeString() : 'soon';
+    return jsonError('You have used your ' + modelPool.limit + ' message pool for this three-hour window. It refreshes at ' + reset + '.', 429);
+  }
+
   const useTools = rawTools === true;
   const godmode = rawGodmode === true;
   // web_search is only offered when a search provider key is configured
