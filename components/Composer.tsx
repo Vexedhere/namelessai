@@ -29,11 +29,11 @@ export function Composer({
   const [commandsOpen, setCommandsOpen] = useState(false);
   const [enhanced, setEnhanced] = useState(false);
   const commands = [
-    { command: '/research', label: 'Deep research', hint: 'Investigate a topic and compare sources', prefix: 'Research this thoroughly, compare reliable sources, cite evidence, and distinguish facts from uncertainty.\\n\\n' },
-    { command: '/plan', label: 'Create a plan', hint: 'Turn the request into actionable steps', prefix: 'Create a practical step-by-step plan with milestones, dependencies, and a definition of done.\\n\\n' },
-    { command: '/code', label: 'Code assistant', hint: 'Implement and review code', prefix: 'Act as a senior software engineer. Explain assumptions, write maintainable code, and include edge cases and tests.\\n\\n' },
-    { command: '/explain', label: 'Explain simply', hint: 'Clear explanation with examples', prefix: 'Explain this from first principles using a concrete example and a short recap.\\n\\n' },
-    { command: '/summarize', label: 'Summarize', hint: 'Extract key points and decisions', prefix: 'Summarize into key points, decisions, risks, and next actions.\\n\\n' },
+    { command: '/research', label: 'Deep research', hint: 'Investigate a topic and compare sources', prefix: 'Research this thoroughly, compare reliable sources, cite evidence, and distinguish facts from uncertainty.\n\n' },
+    { command: '/plan', label: 'Create a plan', hint: 'Turn the request into actionable steps', prefix: 'Create a practical step-by-step plan with milestones, dependencies, and a definition of done.\n\n' },
+    { command: '/code', label: 'Code assistant', hint: 'Implement and review code', prefix: 'Act as a senior software engineer. Explain assumptions, write maintainable code, and include edge cases and tests.\n\n' },
+    { command: '/explain', label: 'Explain simply', hint: 'Clear explanation with examples', prefix: 'Explain this from first principles using a concrete example and a short recap.\n\n' },
+    { command: '/summarize', label: 'Summarize', hint: 'Extract key points and decisions', prefix: 'Summarize into key points, decisions, risks, and next actions.\n\n' },
   ];
   const fileRef = useRef<HTMLInputElement>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -50,7 +50,7 @@ export function Composer({
     if ((!text && files.length === 0) || loading) return;
     const command = commands.find((item) => text.startsWith(item.command));
     if (command) text = command.prefix + text.slice(command.command.length).trim();
-    if (enhanced && text) text = `Please handle this request by identifying the desired outcome, stating assumptions, and delivering an accurate, structured result with practical next steps.\\n\\nREQUEST:\\n${text}`;
+    if (enhanced && text) text = `Please handle this request by identifying the desired outcome, stating assumptions, and delivering an accurate, structured result with practical next steps.\n\nREQUEST:\n${text}`;
     onSend(text || 'Please read and analyse the attached file(s).', files);
     setValue('');
     setFiles([]);
