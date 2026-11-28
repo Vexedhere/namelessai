@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlarmRinger, AlarmsButton } from '@/components/AlarmRinger';
 import { AuthModal } from '@/components/AuthModal';
 import { Composer } from '@/components/Composer';
-import { WorkspaceLaunchpad } from '@/components/WorkspaceLaunchpad';
+import { CommandDashboard } from '@/components/CommandDashboard';
 import { AgentLaunchpad } from '@/components/AgentLaunchpad';
 import { ToolsHub } from '@/components/ToolsHub';
 import { EmailConfirm, type PendingEmail } from '@/components/EmailConfirm';
@@ -859,7 +859,6 @@ export default function ChatPage() {
     return () => setAppCommandHandler(null);
   }, []);
 
-  const firstName = profile?.name.split(/\s+/)[0];
   const current = getModel(model);
   const lastIndex = messages.length - 1;
 
@@ -971,32 +970,21 @@ export default function ChatPage() {
             godmode ? (
               <AgentLaunchpad onLaunch={send} onVoice={voice.supported ? startVoice : undefined} />
             ) : (
-              <div className="home-stage mx-auto flex min-h-full w-full max-w-[1440px] flex-col px-5 pb-10 pt-7 sm:px-8 lg:px-12">
-                <div className="home-kicker">
-                  <span className="home-kicker-mark">N</span>
-                  <span>Nameless Labs <i>/</i> Personal intelligence workspace</span>
-                  <span className="home-kicker-version">{APP_VERSION_LABEL}</span>
-                </div>
-                <div className="home-hero">
-                  <div className="home-hero-copy">
-                    <p className="home-overline"><span /> YOUR NEXT MOVE STARTS HERE</p>
-                    <h2>Make it<br /><em>happen.</em></h2>
-                    <p className="home-intro">{firstName ? `Good to have you here, ${firstName}. ` : ''}Think out loud, explore ideas, understand files, and turn questions into something useful.</p>
-                    <div className="home-model-line">
-                      <span className="home-model-orb"><ModelOrb model={current} size={16} /></span>
-                      <span>POWERED BY <b>{aiName ?? current.name}</b></span>
-                      <button onClick={() => setNameOpen(true)}>PERSONALISE ↗</button>
-                    </div>
-                  </div>
-                  <div className="home-hero-art" aria-hidden="true">
-                    <div className="home-art-index">NL—001</div><div className="home-art-ring home-art-ring-one" /><div className="home-art-ring home-art-ring-two" />
-                    <div className="home-art-core"><span>n</span></div><div className="home-art-cross home-art-cross-a" /><div className="home-art-cross home-art-cross-b" />
-                    <div className="home-art-caption">IDEAS IN<br />MOTION</div><div className="home-art-foot">THINK / MAKE / REPEAT</div>
-                  </div>
-                </div>
-                <WorkspaceLaunchpad onLaunch={send} onVoice={voice.supported ? startVoice : undefined} />
-                <div className="home-footer"><span>BUILT FOR CURIOSITY. DESIGNED FOR MOMENTUM.</span><span>{APP_CODENAME} <i>·</i> {APP_VERSION_LABEL}</span></div>
-              </div>
+              <CommandDashboard
+                chats={chats}
+                modelName={aiName ?? current.name}
+                signedIn={!!user}
+                onLaunch={send}
+                onAgent={() => {
+                  if (!getModel(model).tools) setModel(DEFAULT_MODEL_ID);
+                  setAgent(true);
+                  setGodmode(true);
+                }}
+                onTools={() => setToolsOpen(true)}
+                onDevices={() => setDevicesOpen(true)}
+                onVoice={voice.supported ? startVoice : undefined}
+                onSelectChat={selectChat}
+              />
             )
           ) : (
             <div className="mx-auto w-full max-w-4xl space-y-9 px-4 py-9 sm:px-6">
