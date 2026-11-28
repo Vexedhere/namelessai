@@ -118,7 +118,7 @@ export function applyTheme(idOrName: string): boolean {
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
   root.dataset.theme = mood ? mood.id : t!.id;
   try {
-    sessionStorage.setItem(THEME_KEY, Object.entries(vars).map(([k, v]) => `${k}:${v}`).join(';'));
+    sessionStorage.setItem(THEME_KEY, `${root.dataset.theme}|` + Object.entries(vars).map(([k, v]) => `${k}:${v}`).join(';'));
   } catch {
     /* ignore */
   }
@@ -127,4 +127,4 @@ export function applyTheme(idOrName: string): boolean {
 }
 
 /** Inline script (runs before first paint): re-applies this tab's theme so a reload doesn't flash. */
-export const THEME_BOOT_SCRIPT = `try{var v=sessionStorage.getItem('${THEME_KEY}');if(v&&/^[-\\w:;, .#()%]+$/.test(v))document.documentElement.style.cssText=v}catch(e){}`;
+export const THEME_BOOT_SCRIPT = `try{var v=sessionStorage.getItem('${THEME_KEY}');if(v){var i=v.indexOf('|');if(i>0){document.documentElement.dataset.theme=v.slice(0,i);v=v.slice(i+1)}if(/^[-\\w:;, .#()%]+$/.test(v))document.documentElement.style.cssText=v}}catch(e){}`;
