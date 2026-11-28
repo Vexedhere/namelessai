@@ -286,6 +286,8 @@ export default function ChatPage() {
           p_session_id: sessionId,
           p_name: profile?.name || 'Guest',
           p_user_agent: navigator.userAgent,
+          p_path: window.location.pathname,
+          p_activity: loading ? (godmode ? 'Agent executing' : 'Generating response') : (activeId ? 'Chat workspace' : 'Browsing'),
         });
         if (!alive) return;
         if (error || data?.allowed === false) {
