@@ -18,6 +18,7 @@ export function Composer({
   tier = 'FREE',
   poolRemaining,
   poolLimit,
+  enterToSend = true,
 }: {
   loading: boolean;
   placeholder: string;
@@ -34,6 +35,7 @@ export function Composer({
   tier?: 'FREE' | 'BASE' | 'PLUS' | 'PRO';
   poolRemaining?: number;
   poolLimit?: number;
+  enterToSend?: boolean;
 }) {
   const [value, setValue] = useState('');
   const [files, setFiles] = useState<File[]>([]);
@@ -86,7 +88,7 @@ export function Composer({
           autoFocus
           onChange={(e) => { setValue(e.target.value); setCommandsOpen(e.target.value === '/' || (e.target.value.startsWith('/') && !e.target.value.includes(' '))); }}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            if (enterToSend && e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
               submit();
             }
