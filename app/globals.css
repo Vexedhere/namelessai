@@ -318,3 +318,8 @@ html,body{transition:background-color .35s ease,color .35s ease}
 .workspace-composer-box{flex-wrap:wrap}
 .workspace-composer-box textarea{min-width:120px}
 @media(max-width:640px){.composer-model-switch>div>button{max-width:118px}.composer-model-switch>div>button span:nth-child(2){max-width:65px}}
+
+.composer-model-switch{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.composer-pool-label,.composer-pool-warning{padding-left:8px;font-size:9px;line-height:1.2;color:#85858f}
+.composer-pool-warning{color:#fbbf24}
+:root[data-theme="paper-daylight"] .composer-pool-label,:root[data-theme="matcha-cream"] .composer-pool-label{color:#687268}
