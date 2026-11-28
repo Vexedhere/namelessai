@@ -8,6 +8,7 @@ import { getModel } from '@/lib/models';
 import { Avatar } from './Avatar';
 import { CloseIcon, PlusIcon, TrashIcon } from './Icons';
 import { ModelOrb } from './ModelPicker';
+import { ThemeButton } from './ThemeButton';
 
 export function Sidebar({
   chats,
@@ -87,6 +88,9 @@ export function Sidebar({
           >
             <PlusIcon width={16} height={16} /> New chat
           </button>
+        </div>
+        <div className="px-4 pb-2">
+          <div className="flex items-center justify-between rounded-xl border border-white/[.07] bg-white/[.025] px-3 py-2 text-xs text-zinc-400"><span>Appearance</span><ThemeButton /></div>
         </div>
 
         <div className="px-4 pb-2">
